@@ -14,6 +14,8 @@ import { useAuthStore } from '@/lib/store/auth';
 import { useThreatStore } from '@/lib/store/threats';
 import { SessionMonitor } from '@/components/SessionMonitor';
 import { registerForPushNotificationsAsync } from '../lib/notifications';
+import { ensureProfile, updateProfile } from '../lib/api/profiles';
+import { ToastContainer } from '@/components/Toast';
 import * as Notifications from 'expo-notifications';
 import { useRef, useState } from 'react';
 import { Alert } from 'react-native';
@@ -41,6 +43,7 @@ export default function RootLayout() {
   const [notification, setNotification] = useState<Notifications.Notification | undefined>(undefined);
   const notificationListener = useRef<Notifications.EventSubscription>();
   const responseListener = useRef<Notifications.EventSubscription>();
+  const session = useAuthStore(state => state.session);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -52,6 +55,14 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  useEffect(() => {
+    if (session?.user?.id && expoPushToken) {
+      ensureProfile(session.user.id, session.user.email).then(() => {
+        updateProfile(session.user.id, { expo_push_token: expoPushToken });
+      });
+    }
+  }, [session, expoPushToken]);
 
   useEffect(() => {
     registerForPushNotificationsAsync().then(token => token && setExpoPushToken(token));
@@ -88,6 +99,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <RootLayoutNav />
+      <ToastContainer />
     </GestureHandlerRootView>
   );
 }

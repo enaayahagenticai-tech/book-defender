@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { fetchRegistryEntries, createRegistryEntry, updateRegistryEntry, deleteRegistryEntry } from '../api/registry';
+import { useToastStore } from './toast';
 
 export interface RegistryEntry {
   id: string;
@@ -45,11 +46,21 @@ export const useRegistryStore = create<RegistryState>((set, get) => ({
         set((state) => ({
             entries: state.entries.map(e => e.id === tempId ? savedEntry : e)
         }));
+        useToastStore.getState().showToast({
+            type: 'success',
+            title: 'Entry Added',
+            message: `${entryData.domain} added to registry.`
+        });
     } else {
         set((state) => ({
             entries: state.entries.filter(e => e.id !== tempId),
             error: 'Failed to add registry entry'
         }));
+        useToastStore.getState().showToast({
+            type: 'error',
+            title: 'Operation Failed',
+            message: 'Failed to add registry entry.'
+        });
     }
   },
   removeEntry: async (id) => {
@@ -62,6 +73,17 @@ export const useRegistryStore = create<RegistryState>((set, get) => ({
     const success = await deleteRegistryEntry(id);
     if (!success) {
         set({ entries: previousEntries, error: 'Failed to delete registry entry' });
+        useToastStore.getState().showToast({
+            type: 'error',
+            title: 'Operation Failed',
+            message: 'Failed to delete registry entry.'
+        });
+    } else {
+        useToastStore.getState().showToast({
+            type: 'success',
+            title: 'Entry Removed',
+            message: 'Registry entry removed successfully.'
+        });
     }
   },
   updateEntry: async (id, updates) => {
@@ -76,6 +98,17 @@ export const useRegistryStore = create<RegistryState>((set, get) => ({
     const success = await updateRegistryEntry(id, updates);
     if (!success) {
         set({ entries: previousEntries, error: 'Failed to update registry entry' });
+        useToastStore.getState().showToast({
+            type: 'error',
+            title: 'Operation Failed',
+            message: 'Failed to update registry entry.'
+        });
+    } else {
+        useToastStore.getState().showToast({
+            type: 'success',
+            title: 'Entry Updated',
+            message: 'Registry entry updated successfully.'
+        });
     }
   },
   getEntry: (id) => get().entries.find((e) => e.id === id),
@@ -86,6 +119,11 @@ export const useRegistryStore = create<RegistryState>((set, get) => ({
           set({ entries: data, loading: false });
       } else {
           set({ loading: false, error: 'Failed to fetch registry entries' });
+          useToastStore.getState().showToast({
+            type: 'error',
+            title: 'Connection Error',
+            message: 'Failed to fetch registry entries. Showing offline cache.'
+          });
       }
   }
 }));
