@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Switch, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useAuthStore } from '@/lib/store/auth';
 import { useSecurityStore } from '@/lib/store/security';
-import { schedulePushNotification } from '@/lib/notifications';
+import { schedulePushNotification, TAKEDOWN_CATEGORY } from '@/lib/notifications';
 import Constants from 'expo-constants';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
@@ -24,12 +24,25 @@ export default function SettingsScreen() {
   const toggleSwitch = () => setBiometricsEnabled(!biometricsEnabled);
 
   const triggerTestNotification = async () => {
+    // Send a standard system test notification
     await schedulePushNotification(
       'SYSTEM TEST',
       'Communication protocols verified. Forensics module online.',
       { type: 'test' }
     );
-    Alert.alert('Sent', 'Notification dispatched to system tray.');
+
+    // Send an interactive threat notification (simulating a "Mission Critical" alert)
+    // Delay slightly to ensure distinct arrival
+    setTimeout(async () => {
+      await schedulePushNotification(
+        'CRITICAL THREAT DETECTED',
+        'High confidence detection: phish-bank.com. Action required immediately.',
+        { threatId: 'T-001' },
+        TAKEDOWN_CATEGORY
+      );
+    }, 1500);
+
+    Alert.alert('Sent', 'Test notifications dispatched (System Test + Simulated Threat).');
   };
 
   return (
