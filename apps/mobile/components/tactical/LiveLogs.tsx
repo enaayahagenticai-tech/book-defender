@@ -58,8 +58,8 @@ export function LiveLogs() {
   };
 
   return (
-    <View className="bg-gray-900/80 border border-gray-800 rounded p-4 h-48 mb-6">
-      <Text className="text-gray-500 text-xs font-bold tracking-widest mb-2 border-b border-gray-700 pb-1">
+    <View className="bg-card/80 border border-border rounded p-4 h-48 mb-6">
+      <Text className="text-muted-foreground text-xs font-bold tracking-widest mb-2 border-b border-border pb-1">
         LIVE INTEL STREAM
       </Text>
       <ScrollView
@@ -69,11 +69,11 @@ export function LiveLogs() {
       >
         {logs.map((log) => (
           <View key={log.id} className="flex-row mb-1">
-            <Text className="text-gray-600 font-mono text-[10px] mr-2">{log.timestamp}</Text>
+            <Text className="text-muted-foreground font-mono text-[10px] mr-2">{log.timestamp}</Text>
             <Text className={`font-mono text-[10px] ${
-                log.type === 'warn' ? 'text-yellow-500' :
-                log.type === 'success' ? 'text-emerald-500' :
-                'text-gray-300'
+                log.type === 'warn' ? 'text-warning' :
+                log.type === 'success' ? 'text-success' :
+                'text-foreground'
             }`}>
               {log.message}
             </Text>
