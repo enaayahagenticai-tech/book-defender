@@ -1,23 +1,15 @@
-import '../global.css';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Slot, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
+import { View, ActivityIndicator } from 'react-native';
 
-import { useColorScheme } from '@/components/useColorScheme';
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
-};
+import '../global.css';
+import { useColorScheme } from 'nativewind';
+import { FontAwesome } from '@expo/vector-icons';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -28,7 +20,11 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  const [session, setSession] = useState<Session | null>(null);
+  const [initialized, setInitialized] = useState(false);
+  const segments = useSegments();
+  const router = useRouter();
+
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -39,22 +35,44 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setInitialized(true);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!initialized) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (session && inAuthGroup) {
+      router.replace('/dashboard');
+    } else if (!session && !inAuthGroup) {
+      router.replace('/login');
+    }
+  }, [session, segments, initialized]);
+
+  if (!loaded || !initialized) {
+    return (
+      <View className="flex-1 bg-black justify-center items-center">
+        <ActivityIndicator size="large" color="#ff4444" />
+      </View>
+    );
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
+    <ThemeProvider value={DarkTheme}>
+      <Slot />
     </ThemeProvider>
   );
 }
