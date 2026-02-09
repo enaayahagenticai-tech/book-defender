@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { useThreatStore } from '@/lib/store/threats';
 import { SwipeableThreatCard } from '@/components/tactical/SwipeableThreatCard';
 
@@ -7,9 +7,25 @@ export default function TakedownScreen() {
   const threats = useThreatStore((state) => state.threats);
   const resolveThreat = useThreatStore((state) => state.resolveThreat);
   const ignoreThreat = useThreatStore((state) => state.ignoreThreat);
+  const refreshThreats = useThreatStore((state) => state.refreshThreats);
+  const loading = useThreatStore((state) => state.loading);
+
+  useEffect(() => {
+    // Refresh threats on mount to ensure we have the latest data
+    refreshThreats();
+  }, []);
 
   // Filter for active/pending threats
   const activeThreats = threats.filter(t => t.status === 'active' || t.status === 'pending');
+
+  if (loading && activeThreats.length === 0) {
+      return (
+          <View className="flex-1 items-center justify-center bg-black p-4">
+              <ActivityIndicator size="large" color="#fff" />
+              <Text className="text-gray-500 mt-4 font-mono">LOADING INTEL...</Text>
+          </View>
+      )
+  }
 
   if (activeThreats.length === 0) {
     return (

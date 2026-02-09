@@ -37,14 +37,15 @@ const WebStorageAdapter = {
   },
 };
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+// Fallback to placeholder to prevent app crash if env vars are missing
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("Supabase URL or Anon Key is missing from environment variables.");
+if (!process.env.EXPO_PUBLIC_SUPABASE_URL || !process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY) {
+  console.warn("Supabase URL or Anon Key is missing from environment variables. Using placeholder values.");
 }
 
-export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: Platform.OS === 'web' ? WebStorageAdapter : ExpoSecureStoreAdapter,
     autoRefreshToken: true,
