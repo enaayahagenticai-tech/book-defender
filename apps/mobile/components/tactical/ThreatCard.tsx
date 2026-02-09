@@ -1,18 +1,11 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Threat } from '@/lib/store/threats';
 
-interface ThreatCardProps {
-  id: string;
-  domain: string;
-  riskScore: number;
-  status: 'active' | 'pending' | 'resolved';
-}
-
-export function ThreatCard({ id, domain, riskScore, status }: ThreatCardProps) {
-  const statusColor = status === 'active' ? 'text-red-500' : status === 'pending' ? 'text-yellow-500' : 'text-green-500';
-  const borderColor = status === 'active' ? 'border-red-500' : status === 'pending' ? 'border-yellow-500' : 'border-green-500';
+export function ThreatCard({ id, domain, riskScore, status }: Threat) {
+  const statusColor = status === 'active' ? 'text-red-500' : status === 'pending' ? 'text-yellow-500' : status === 'resolved' ? 'text-green-500' : 'text-gray-500';
+  const borderColor = status === 'active' ? 'border-red-500' : status === 'pending' ? 'border-yellow-500' : status === 'resolved' ? 'border-green-500' : 'border-gray-500';
 
   return (
     <View className={twMerge("bg-black border p-4 rounded-lg mb-4", borderColor)}>
