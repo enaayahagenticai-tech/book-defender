@@ -1,0 +1,35 @@
+Starting project at /app/apps/mobile
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  @expo/vector-icons@14.1.0 - expected version: ~14.0.4
+  react-native@0.76.1 - expected version: 0.76.9
+  react-native-gesture-handler@2.30.0 - expected version: ~2.20.2
+  react-native-screens@4.0.0 - expected version: ~4.4.0
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+λ Bundled 25082ms node_modules/expo-router/node/render.js (1258 modules)
+λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
+  factory (lib/supabase.ts:45:11)
+  factory (app/(auth)/login.tsx:3:1)
+Web Bundled 29361ms node_modules/expo-router/entry.js (1383 modules)
+Web Bundled 10166ms node_modules/expo-router/entry.js (1384 modules)
+ LOG  [web] Logs will appear in the browser console
+λ Bundled 48ms node_modules/expo-router/node/render.js (1 module)
+λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
+  factory (lib/supabase.ts:45:11)
+  factory (app/(auth)/login.tsx:3:1)
+Web Bundled 378ms node_modules/expo-router/entry.js (1 module)
+λ Bundled 56ms node_modules/expo-router/node/render.js (1 module)
+λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
+  factory (lib/supabase.ts:45:11)
+  factory (app/(auth)/login.tsx:3:1)
+Web Bundled 417ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 69ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+λ Bundled 219ms node_modules/expo-router/node/render.js (1 module)
+λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
+  factory (app/(auth)/login.tsx:3:1)
+Web Bundled 950ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 124ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
