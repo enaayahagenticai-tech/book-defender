@@ -1,12 +1,25 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRegistryStore } from '@/lib/store/registry';
 import { RegistryCard } from '@/components/tactical/RegistryCard';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function RegistryScreen() {
   const entries = useRegistryStore((state) => state.entries);
+  const fetchEntries = useRegistryStore((state) => state.fetchEntries);
+  const loading = useRegistryStore((state) => state.loading);
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchEntries();
+  }, []);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchEntries();
+    setRefreshing(false);
+  }, [fetchEntries]);
 
   const filteredEntries = useMemo(() => {
     if (!searchQuery) return entries;
@@ -39,6 +52,7 @@ export default function RegistryScreen() {
       <FlatList
         data={filteredEntries}
         keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={loading || refreshing} onRefresh={onRefresh} tintColor="#fff" />}
         renderItem={({ item }) => (
             <View className="mb-4">
                 <RegistryCard {...item} />

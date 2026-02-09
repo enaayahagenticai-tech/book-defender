@@ -1,4 +1,12 @@
 import { useThreatStore } from './threats';
+import { act } from 'react-test-renderer';
+
+// Mock API
+jest.mock('../api/threats', () => ({
+  createThreat: jest.fn((threat) => Promise.resolve({ ...threat, id: 'mock-id-from-api' })),
+  updateThreatStatus: jest.fn(() => Promise.resolve(true)),
+  fetchThreats: jest.fn(() => Promise.resolve([])),
+}));
 
 describe('useThreatStore', () => {
   beforeEach(() => {
@@ -7,37 +15,40 @@ describe('useThreatStore', () => {
         { id: 'T-001', domain: 'phish-bank.com', riskScore: 98, status: 'active' },
         { id: 'T-002', domain: 'secure-login-update.net', riskScore: 85, status: 'pending' },
       ],
+      error: null,
+      loading: false,
     });
   });
 
-  it('should resolve a threat', () => {
-    const { resolveThreat, threats } = useThreatStore.getState();
-    resolveThreat('T-001');
+  it('should resolve a threat optimistically', async () => {
+    const { resolveThreat } = useThreatStore.getState();
+    await resolveThreat('T-001');
     const updatedThreats = useThreatStore.getState().threats;
     const resolvedThreat = updatedThreats.find((t) => t.id === 'T-001');
     expect(resolvedThreat?.status).toBe('resolved');
   });
 
-  it('should ignore a threat', () => {
+  it('should ignore a threat optimistically', async () => {
     const { ignoreThreat } = useThreatStore.getState();
-    ignoreThreat('T-001');
+    await ignoreThreat('T-001');
     const updatedThreats = useThreatStore.getState().threats;
     const ignoredThreat = updatedThreats.find((t) => t.id === 'T-001');
     expect(ignoredThreat?.status).toBe('ignored');
   });
 
-  it('should add a threat', () => {
+  it('should add a threat and update ID from API', async () => {
     const { addThreat } = useThreatStore.getState();
-    const newThreat = {
-      id: 'T-NEW',
+    const newThreatData = {
       domain: 'new-threat.com',
       riskScore: 90,
       status: 'active' as const,
     };
-    addThreat(newThreat);
+
+    await addThreat(newThreatData);
+
     const updatedThreats = useThreatStore.getState().threats;
-    expect(updatedThreats).toContainEqual(newThreat);
-    expect(updatedThreats[0]).toEqual(newThreat); // Assuming added at the beginning
+    expect(updatedThreats[0].domain).toEqual(newThreatData.domain);
+    expect(updatedThreats[0].id).toBe('mock-id-from-api');
   });
 
   it('should get active threats', () => {

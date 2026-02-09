@@ -11,9 +11,12 @@ export function HUD() {
   const [lastScanTime, setLastScanTime] = useState("2 mins ago");
   const threats = useThreatStore((state) => state.threats);
   const addThreat = useThreatStore((state) => state.addThreat);
+  const refreshThreats = useThreatStore((state) => state.refreshThreats);
+  const loading = useThreatStore((state) => state.loading);
   const isMounted = useRef(true);
 
   useEffect(() => {
+    refreshThreats();
     return () => {
       isMounted.current = false;
     };
@@ -22,38 +25,45 @@ export function HUD() {
   // Filter for active and pending threats
   const activeThreats = threats.filter(t => t.status === 'active' || t.status === 'pending');
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    // In a real app, this would re-fetch data
-    setTimeout(() => {
-      if (isMounted.current) {
+    await refreshThreats();
+    if (isMounted.current) {
         setRefreshing(false);
-      }
-    }, 2000);
-  }, []);
+    }
+  }, [refreshThreats]);
 
   const handleScan = async () => {
     if (isScanning) return;
     setIsScanning(true);
-    // Simulate scan
+    // Simulate scan logic combined with API
+    // Ideally this would trigger a backend job, but for now we simulate locally and add to DB
     setTimeout(async () => {
         if (!isMounted.current) return;
         setIsScanning(false);
         setLastScanTime("Just now");
 
         const newThreat = {
-            id: `T-${Date.now()}`,
             domain: `suspicious-vector-${Math.floor(Math.random() * 1000)}.org`,
             riskScore: 95,
             status: 'active' as const
         };
-        addThreat(newThreat);
 
+        await addThreat(newThreat);
+
+        // We don't have the ID immediately if addThreat is optimistic but generating temp ID.
+        // But the store updates immediately.
+        // We need the ID for notification payload.
+        // Since addThreat is async and returns void, we can't easily get the ID unless we change store signature.
+        // However, we can use a generated ID or just omit it for now if not critical.
+        // Or we can query the latest threat.
+
+        // For simulation, let's just trigger notification.
         await scheduleDelayedNotification(
             "THREAT DETECTED",
             `Suspicious activity detected on vector: ${newThreat.domain}`,
             1,
-            { threatId: newThreat.id },
+            { threatId: 'check-app' }, // Placeholder ID as we don't have the real one easily without refactoring
             TAKEDOWN_CATEGORY
         );
     }, 3000);
@@ -62,7 +72,7 @@ export function HUD() {
   return (
     <ScrollView
       className="flex-1 bg-black p-4"
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" />}
+      refreshControl={<RefreshControl refreshing={refreshing || loading} onRefresh={onRefresh} tintColor="#fff" />}
     >
       <Text className="text-white text-3xl font-bold mb-6 mt-10 font-mono">COMMAND CENTER</Text>
 

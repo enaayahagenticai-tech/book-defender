@@ -1,6 +1,14 @@
 import { act } from 'react-test-renderer';
 import { useRegistryStore, RegistryEntry } from './registry';
 
+// Mock API calls
+jest.mock('../api/registry', () => ({
+  createRegistryEntry: jest.fn((entry) => Promise.resolve({ ...entry, id: 'mock-id-from-api' })),
+  updateRegistryEntry: jest.fn(() => Promise.resolve(true)),
+  deleteRegistryEntry: jest.fn(() => Promise.resolve(true)),
+  fetchRegistryEntries: jest.fn(() => Promise.resolve([])),
+}));
+
 describe('useRegistryStore', () => {
   beforeEach(() => {
     // Reset the store before each test
@@ -8,40 +16,43 @@ describe('useRegistryStore', () => {
       entries: [
         { id: 'R-001', domain: 'malware-distribution.net', status: 'active', riskScore: 95, lastScanned: '2023-10-27T10:00:00Z', tags: ['malware', 'phishing'] },
       ],
+      error: null,
+      loading: false,
     });
   });
 
-  it('should add a new entry', () => {
-    const newEntry: RegistryEntry = {
-      id: 'R-NEW',
+  it('should add a new entry optimistically', async () => {
+    const newEntryData = {
       domain: 'new-threat.com',
-      status: 'active',
+      status: 'active' as const,
       riskScore: 80,
       lastScanned: '2023-10-28T09:00:00Z',
       tags: ['new'],
     };
 
-    act(() => {
-      useRegistryStore.getState().addEntry(newEntry);
+    await act(async () => {
+      await useRegistryStore.getState().addEntry(newEntryData);
     });
 
     const entries = useRegistryStore.getState().entries;
     expect(entries).toHaveLength(2);
-    expect(entries[0]).toEqual(newEntry);
+    expect(entries[0].domain).toEqual(newEntryData.domain);
+    // The ID will be updated by the API mock
+    expect(entries[0].id).toEqual('mock-id-from-api');
   });
 
-  it('should remove an entry', () => {
-    act(() => {
-      useRegistryStore.getState().removeEntry('R-001');
+  it('should remove an entry optimistically', async () => {
+    await act(async () => {
+      await useRegistryStore.getState().removeEntry('R-001');
     });
 
     const entries = useRegistryStore.getState().entries;
     expect(entries).toHaveLength(0);
   });
 
-  it('should update an entry', () => {
-    act(() => {
-      useRegistryStore.getState().updateEntry('R-001', { status: 'inactive' });
+  it('should update an entry optimistically', async () => {
+    await act(async () => {
+      await useRegistryStore.getState().updateEntry('R-001', { status: 'inactive' });
     });
 
     const entry = useRegistryStore.getState().getEntry('R-001');
