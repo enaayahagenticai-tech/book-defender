@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useColorScheme } from '@/components/useColorScheme';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store/auth';
+import { useThreatStore } from '@/lib/store/threats';
 import { registerForPushNotificationsAsync } from '../lib/notifications';
 import * as Notifications from 'expo-notifications';
 import { useRef, useState } from 'react';
@@ -59,6 +60,15 @@ export default function RootLayout() {
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log(response);
+      const actionId = response.actionIdentifier;
+      const data = response.notification.request.content.data;
+      const threatId = data?.threatId;
+
+      if (actionId === 'APPROVE_TAKEDOWN' && threatId) {
+        useThreatStore.getState().resolveThreat(threatId);
+      } else if (actionId === 'IGNORE_THREAT' && threatId) {
+        useThreatStore.getState().ignoreThreat(threatId);
+      }
     });
 
     return () => {

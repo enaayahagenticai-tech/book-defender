@@ -3,13 +3,14 @@ import { View, Text, ScrollView, RefreshControl, TouchableOpacity, ActivityIndic
 import { ThreatCard } from './ThreatCard';
 import { SystemHealth } from './SystemHealth';
 import { useThreatStore } from '@/lib/store/threats';
-import { scheduleDelayedNotification } from '@/lib/notifications';
+import { scheduleDelayedNotification, TAKEDOWN_CATEGORY } from '@/lib/notifications';
 
 export function HUD() {
   const [refreshing, setRefreshing] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScanTime, setLastScanTime] = useState("2 mins ago");
   const threats = useThreatStore((state) => state.threats);
+  const addThreat = useThreatStore((state) => state.addThreat);
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -39,10 +40,21 @@ export function HUD() {
         if (!isMounted.current) return;
         setIsScanning(false);
         setLastScanTime("Just now");
+
+        const newThreat = {
+            id: `T-${Date.now()}`,
+            domain: `suspicious-vector-${Math.floor(Math.random() * 1000)}.org`,
+            riskScore: 95,
+            status: 'active' as const
+        };
+        addThreat(newThreat);
+
         await scheduleDelayedNotification(
             "THREAT DETECTED",
-            "Suspicious activity detected on vector: 192.168.1.105",
-            1
+            `Suspicious activity detected on vector: ${newThreat.domain}`,
+            1,
+            { threatId: newThreat.id },
+            TAKEDOWN_CATEGORY
         );
     }, 3000);
   };

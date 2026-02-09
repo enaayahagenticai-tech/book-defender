@@ -8,6 +8,8 @@ export interface NotificationState {
   expoPushToken?: string;
 }
 
+export const TAKEDOWN_CATEGORY = 'TAKEDOWN_CATEGORY';
+
 // Configure how notifications should be handled when the app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -17,8 +19,33 @@ Notifications.setNotificationHandler({
   }),
 });
 
+async function registerNotificationCategoriesAsync() {
+  if (Platform.OS === 'web') return;
+
+  await Notifications.setNotificationCategoryAsync(TAKEDOWN_CATEGORY, [
+    {
+      identifier: 'APPROVE_TAKEDOWN',
+      buttonTitle: 'Authorize Takedown',
+      options: {
+        isDestructive: true,
+        opensAppToForeground: true,
+      },
+    },
+    {
+      identifier: 'IGNORE_THREAT',
+      buttonTitle: 'Ignore',
+      options: {
+        isAuthenticationRequired: false,
+        opensAppToForeground: false,
+      },
+    },
+  ]);
+}
+
 export async function registerForPushNotificationsAsync() {
   let token;
+
+  await registerNotificationCategoriesAsync();
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
@@ -60,25 +87,27 @@ export async function registerForPushNotificationsAsync() {
   return token;
 }
 
-export async function schedulePushNotification(title: string, body: string, data: any = {}) {
+export async function schedulePushNotification(title: string, body: string, data: any = {}, categoryId?: string) {
   await Notifications.scheduleNotificationAsync({
     content: {
       title,
       body,
       data,
       sound: true, // Default sound
+      categoryIdentifier: categoryId,
     },
     trigger: null, // null means send immediately
   });
 }
 
-export async function scheduleDelayedNotification(title: string, body: string, seconds: number, data: any = {}) {
+export async function scheduleDelayedNotification(title: string, body: string, seconds: number, data: any = {}, categoryId?: string) {
     await Notifications.scheduleNotificationAsync({
         content: {
             title,
             body,
             data,
             sound: true,
+            categoryIdentifier: categoryId,
         },
         trigger: {
             seconds: seconds,
