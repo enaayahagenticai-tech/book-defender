@@ -1,9 +1,16 @@
 import { useSecurityStore } from './security';
 
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  setItem: jest.fn(() => Promise.resolve()),
+  getItem: jest.fn(() => Promise.resolve(null)),
+  removeItem: jest.fn(() => Promise.resolve()),
+}));
+
 describe('useSecurityStore', () => {
   beforeEach(() => {
     // Reset store state
-    useSecurityStore.setState({ isLocked: true, lastActive: null });
+    useSecurityStore.setState({ isLocked: true, lastActive: null, biometricsEnabled: true });
   });
 
   it('should initialize with locked state', () => {
@@ -30,5 +37,12 @@ describe('useSecurityStore', () => {
     useSecurityStore.getState().setLastActive(timestamp);
     const state = useSecurityStore.getState();
     expect(state.lastActive).toBe(timestamp);
+  });
+
+  it('should toggle biometrics', () => {
+    useSecurityStore.getState().setBiometricsEnabled(false);
+    expect(useSecurityStore.getState().biometricsEnabled).toBe(false);
+    useSecurityStore.getState().setBiometricsEnabled(true);
+    expect(useSecurityStore.getState().biometricsEnabled).toBe(true);
   });
 });
