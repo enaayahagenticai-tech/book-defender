@@ -128,10 +128,10 @@ function RootLayoutNav() {
 
     if (session && inAuthGroup) {
       router.replace('/(protected)/(tabs)');
-    } else if (!session && segments[0] !== '(auth)') {
+    } else if (!session && !inAuthGroup) {
       // Redirect to login only if not already in (auth) group
       // This prevents infinite loop if the user is already on the login screen
-      router.replace('/(auth)');
+      router.replace('/login');
     }
   }, [session, initialized, segments]);
 
@@ -144,7 +144,7 @@ function RootLayoutNav() {
       <SessionMonitor>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         </Stack>
       </SessionMonitor>
