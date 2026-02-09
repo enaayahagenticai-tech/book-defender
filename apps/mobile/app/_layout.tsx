@@ -12,9 +12,11 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/store/auth';
 import { useThreatStore } from '@/lib/store/threats';
+import { SessionMonitor } from '@/components/SessionMonitor';
 import { registerForPushNotificationsAsync } from '../lib/notifications';
 import * as Notifications from 'expo-notifications';
 import { useRef, useState } from 'react';
+import { Alert } from 'react-native';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -58,16 +60,18 @@ export default function RootLayout() {
       setNotification(notification);
     });
 
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(async response => {
       console.log(response);
       const actionId = response.actionIdentifier;
       const data = response.notification.request.content.data;
       const threatId = data?.threatId;
 
       if (actionId === 'APPROVE_TAKEDOWN' && threatId) {
-        useThreatStore.getState().resolveThreat(threatId);
+        await useThreatStore.getState().resolveThreat(threatId);
+        Alert.alert('Takedown Authorized', `Threat ${threatId} has been resolved.`);
       } else if (actionId === 'IGNORE_THREAT' && threatId) {
-        useThreatStore.getState().ignoreThreat(threatId);
+        await useThreatStore.getState().ignoreThreat(threatId);
+        Alert.alert('Threat Ignored', `Threat ${threatId} marked as false positive.`);
       }
     });
 
@@ -125,11 +129,13 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
+      <SessionMonitor>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </SessionMonitor>
     </ThemeProvider>
   );
 }
