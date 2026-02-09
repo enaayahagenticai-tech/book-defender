@@ -54,6 +54,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="shield" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="registry"
+        options={{
+          title: 'Registry',
+          tabBarIcon: ({ color }) => <TabBarIcon name="database" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
