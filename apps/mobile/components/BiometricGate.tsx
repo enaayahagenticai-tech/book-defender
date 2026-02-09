@@ -7,13 +7,15 @@ import { useAuthStore } from '@/lib/store/auth';
 const LOCK_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 export function BiometricGate({ children }: { children: React.ReactNode }) {
-  const { isLocked, lockApp, unlockApp, lastActive, setLastActive } = useSecurityStore();
+  const { isLocked, lockApp, unlockApp, lastActive, setLastActive, biometricsEnabled } = useSecurityStore();
   const { session } = useAuthStore();
   const appState = useRef(AppState.currentState);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Auto-lock on background
   useEffect(() => {
+    if (!biometricsEnabled) return;
+
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (
         appState.current.match(/inactive|background/) &&
@@ -37,18 +39,30 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.remove();
     };
-  }, [lastActive, lockApp, setLastActive]);
+  }, [lastActive, lockApp, setLastActive, biometricsEnabled]);
 
 
   // Prompt for biometrics if locked and logged in
   useEffect(() => {
-    if (isLocked && session) {
+    if (!session) return;
+
+    if (!biometricsEnabled) {
+        if (isLocked) unlockApp();
+        return;
+    }
+
+    if (isLocked) {
       authenticate();
     }
-  }, [isLocked, session]);
+  }, [isLocked, session, biometricsEnabled]);
 
   const authenticate = async () => {
     if (isAuthenticating) return;
+    if (!biometricsEnabled) {
+        unlockApp();
+        return;
+    }
+
     setIsAuthenticating(true);
 
     try {
@@ -81,6 +95,11 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
   // If not logged in, we don't gate. The router handles auth redirection.
   if (!session) {
     return <>{children}</>;
+  }
+
+  // If biometrics are disabled, bypass the gate
+  if (!biometricsEnabled) {
+      return <>{children}</>;
   }
 
   if (isLocked) {
