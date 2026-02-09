@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { fetchThreats, updateThreatStatus, createThreat } from '../api/threats';
+import { useToastStore } from './toast';
 
 export interface Threat {
   id: string;
@@ -47,12 +48,22 @@ export const useThreatStore = create<ThreatState>((set, get) => ({
         set((state) => ({
             threats: state.threats.map(t => t.id === tempId ? savedThreat : t)
         }));
+        useToastStore.getState().showToast({
+            type: 'success',
+            title: 'Threat Added',
+            message: `${threatData.domain} added to watchlist.`
+        });
     } else {
         // Rollback on error
         set((state) => ({
             threats: state.threats.filter(t => t.id !== tempId),
             error: 'Failed to add threat'
         }));
+        useToastStore.getState().showToast({
+            type: 'error',
+            title: 'Operation Failed',
+            message: 'Failed to add threat.'
+        });
     }
   },
   resolveThreat: async (id) => {
@@ -68,6 +79,17 @@ export const useThreatStore = create<ThreatState>((set, get) => ({
     if (!success) {
         // Rollback
         set({ threats: previousThreats, error: 'Failed to resolve threat' });
+        useToastStore.getState().showToast({
+            type: 'error',
+            title: 'Operation Failed',
+            message: 'Failed to resolve threat.'
+        });
+    } else {
+        useToastStore.getState().showToast({
+            type: 'success',
+            title: 'Threat Resolved',
+            message: 'Threat neutralized.'
+        });
     }
   },
   ignoreThreat: async (id) => {
@@ -83,6 +105,17 @@ export const useThreatStore = create<ThreatState>((set, get) => ({
     if (!success) {
         // Rollback
         set({ threats: previousThreats, error: 'Failed to ignore threat' });
+        useToastStore.getState().showToast({
+            type: 'error',
+            title: 'Operation Failed',
+            message: 'Failed to ignore threat.'
+        });
+    } else {
+        useToastStore.getState().showToast({
+            type: 'info',
+            title: 'Threat Ignored',
+            message: 'Threat marked as false positive.'
+        });
     }
   },
   getActiveThreats: () => {
@@ -96,6 +129,11 @@ export const useThreatStore = create<ThreatState>((set, get) => ({
           set({ threats: data, loading: false });
       } else {
           set({ loading: false, error: 'Failed to fetch threats' });
+          useToastStore.getState().showToast({
+            type: 'error',
+            title: 'Connection Error',
+            message: 'Failed to fetch threats. Showing offline cache.'
+          });
       }
   }
 }));
