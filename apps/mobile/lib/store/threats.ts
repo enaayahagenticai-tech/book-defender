@@ -10,6 +10,7 @@ export interface Threat {
 interface ThreatState {
   threats: Threat[];
   setThreats: (threats: Threat[]) => void;
+  addThreat: (threat: Threat) => void;
   resolveThreat: (id: string) => void;
   ignoreThreat: (id: string) => void;
   getActiveThreats: () => Threat[];
@@ -26,6 +27,7 @@ export const useThreatStore = create<ThreatState>((set, get) => ({
      { id: 'T-007', domain: 'free-gift-card.com', riskScore: 65, status: 'pending' },
   ],
   setThreats: (threats) => set({ threats }),
+  addThreat: (threat) => set((state) => ({ threats: [threat, ...state.threats] })),
   resolveThreat: (id) =>
     set((state) => ({
       threats: state.threats.map((t) =>
