@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Switch, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useAuthStore } from '@/lib/store/auth';
 import { useSecurityStore } from '@/lib/store/security';
+import { schedulePushNotification } from '@/lib/notifications';
 import Constants from 'expo-constants';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
@@ -21,6 +22,15 @@ export default function SettingsScreen() {
   };
 
   const toggleSwitch = () => setBiometricsEnabled(!biometricsEnabled);
+
+  const triggerTestNotification = async () => {
+    await schedulePushNotification(
+      'SYSTEM TEST',
+      'Communication protocols verified. Forensics module online.',
+      { type: 'test' }
+    );
+    Alert.alert('Sent', 'Notification dispatched to system tray.');
+  };
 
   return (
     <ScrollView className="flex-1 bg-black p-4">
@@ -48,6 +58,17 @@ export default function SettingsScreen() {
                 value={biometricsEnabled}
             />
         </View>
+
+        <TouchableOpacity
+            className="flex-row items-center justify-between bg-gray-900/50 p-4 rounded border border-gray-800"
+            onPress={triggerTestNotification}
+        >
+            <View>
+                <Text className="text-white font-bold font-mono mb-1">Test Comms</Text>
+                <Text className="text-gray-500 text-xs font-mono">Verify push notification relay</Text>
+            </View>
+            <FontAwesome name="bell-o" size={20} color="#666" />
+        </TouchableOpacity>
       </View>
 
       <View className="mb-8">

@@ -37,14 +37,20 @@ export function SwipeableThreatCard({ threat, onSwipeLeft, onSwipeRight, enabled
        if (Math.abs(translateX.value) > SWIPE_THRESHOLD) {
           if (translateX.value > 0) {
             // Swipe Right (Takedown)
-            runOnJS(onSwipeRight)(threat.id);
             runOnJS(Haptics.notificationAsync)(Haptics.NotificationFeedbackType.Success);
-            translateX.value = withSpring(SCREEN_WIDTH * 1.5);
+            translateX.value = withSpring(SCREEN_WIDTH * 1.5, { damping: 20, stiffness: 200 }, (finished) => {
+                if (finished) {
+                    runOnJS(onSwipeRight)(threat.id);
+                }
+            });
           } else {
             // Swipe Left (False Positive)
-            runOnJS(onSwipeLeft)(threat.id);
             runOnJS(Haptics.notificationAsync)(Haptics.NotificationFeedbackType.Error);
-            translateX.value = withSpring(-SCREEN_WIDTH * 1.5);
+            translateX.value = withSpring(-SCREEN_WIDTH * 1.5, { damping: 20, stiffness: 200 }, (finished) => {
+                if (finished) {
+                    runOnJS(onSwipeLeft)(threat.id);
+                }
+            });
           }
        } else {
          translateX.value = withSpring(0);

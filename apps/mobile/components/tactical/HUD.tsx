@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ThreatCard } from './ThreatCard';
 import { SystemHealth } from './SystemHealth';
+import { LiveLogs } from './LiveLogs';
 import { useThreatStore } from '@/lib/store/threats';
 import { scheduleDelayedNotification, TAKEDOWN_CATEGORY } from '@/lib/notifications';
 
@@ -77,6 +78,8 @@ export function HUD() {
       <Text className="text-white text-3xl font-bold mb-6 mt-10 font-mono">COMMAND CENTER</Text>
 
       <SystemHealth status="online" uptime="48h 12m" lastScan={lastScanTime} />
+
+      <LiveLogs />
 
       <TouchableOpacity
         className={`w-full py-4 mb-8 rounded border ${isScanning ? 'bg-gray-800 border-gray-700' : 'bg-white border-white'} items-center justify-center`}
