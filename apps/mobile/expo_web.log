@@ -8,28 +8,25 @@ The following packages should be updated for best compatibility with the install
 Your project may not work correctly until you install the expected versions of the packages.
 Waiting on http://localhost:8081
 Logs for your project will appear below.
-λ Bundled 25082ms node_modules/expo-router/node/render.js (1258 modules)
+Web Bundled 29342ms node_modules/expo-router/entry.js (1383 modules)
+λ Bundled 29694ms node_modules/expo-router/node/render.js (1260 modules)
 λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
   factory (lib/supabase.ts:45:11)
   factory (app/(auth)/login.tsx:3:1)
-Web Bundled 29361ms node_modules/expo-router/entry.js (1383 modules)
-Web Bundled 10166ms node_modules/expo-router/entry.js (1384 modules)
+Error: Premature close
+    at onclose (node:internal/streams/end-of-stream:171:30)
+    at processTicksAndRejections (node:internal/process/task_queues:85:11)
+λ Bundled 76ms node_modules/expo-router/node/render.js (1 module)
+λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
+  factory (lib/supabase.ts:45:11)
+  factory (app/(auth)/login.tsx:3:1)
+Web Bundled 933ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 11762ms node_modules/expo-router/entry.js (1384 modules)
  LOG  [web] Logs will appear in the browser console
-λ Bundled 48ms node_modules/expo-router/node/render.js (1 module)
+λ Bundled 101ms node_modules/expo-router/node/render.js (1 module)
 λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
   factory (lib/supabase.ts:45:11)
   factory (app/(auth)/login.tsx:3:1)
-Web Bundled 378ms node_modules/expo-router/entry.js (1 module)
-λ Bundled 56ms node_modules/expo-router/node/render.js (1 module)
-λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
-  factory (lib/supabase.ts:45:11)
-  factory (app/(auth)/login.tsx:3:1)
-Web Bundled 417ms node_modules/expo-router/entry.js (1 module)
-Web Bundled 69ms node_modules/expo-router/entry.js (1 module)
- LOG  [web] Logs will appear in the browser console
-λ Bundled 219ms node_modules/expo-router/node/render.js (1 module)
-λ  WARN  Supabase URL or Anon Key is missing from environment variables. Using placeholder values.
-  factory (app/(auth)/login.tsx:3:1)
-Web Bundled 950ms node_modules/expo-router/entry.js (1 module)
-Web Bundled 124ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 677ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 116ms node_modules/expo-router/entry.js (1 module)
  LOG  [web] Logs will appear in the browser console

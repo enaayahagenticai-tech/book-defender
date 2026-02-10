@@ -3,12 +3,14 @@ import { View, Text, Switch, TouchableOpacity, ScrollView, Alert } from 'react-n
 import { useAuthStore } from '@/lib/store/auth';
 import { useSecurityStore } from '@/lib/store/security';
 import { schedulePushNotification, TAKEDOWN_CATEGORY } from '@/lib/notifications';
+import { useColorScheme } from '@/components/useColorScheme';
 import Constants from 'expo-constants';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function SettingsScreen() {
   const { session, signOut } = useAuthStore();
   const { biometricsEnabled, setBiometricsEnabled } = useSecurityStore();
+  const colorScheme = useColorScheme();
 
   // Handle case where user might be null but session exists (shouldn't happen often)
   const email = session?.user?.email ?? 'Unknown User';
@@ -45,11 +47,16 @@ export default function SettingsScreen() {
     Alert.alert('Sent', 'Test notifications dispatched (System Test + Simulated Threat).');
   };
 
+  const iconColor = colorScheme === 'dark' ? '#94a3b8' : '#64748b'; // slate-400 : slate-500
+  const switchTrackColor = { false: colorScheme === 'dark' ? '#334155' : '#cbd5e1', true: '#3b82f6' }; // slate-700 : slate-300 : blue-500
+  const switchThumbColor = biometricsEnabled ? '#fff' : '#f4f3f4';
+  const iosBackgroundColor = colorScheme === 'dark' ? '#334155' : '#cbd5e1';
+
   return (
     <ScrollView className="flex-1 bg-background p-4">
       <View className="items-center mb-10 mt-10">
         <View className="w-24 h-24 bg-card rounded-full items-center justify-center mb-4 border border-border">
-          <FontAwesome name="user-secret" size={40} color="#64748b" />
+          <FontAwesome name="user-secret" size={40} color={iconColor} />
         </View>
         <Text className="text-foreground text-xl font-bold font-mono tracking-wider">{email}</Text>
         <Text className="text-success font-mono text-xs tracking-widest mt-1">OPERATOR ACTIVE</Text>
@@ -64,9 +71,9 @@ export default function SettingsScreen() {
                 <Text className="text-muted-foreground text-xs font-mono">Require FaceID/TouchID on entry</Text>
             </View>
             <Switch
-                trackColor={{ false: '#333', true: '#3b82f6' }}
-                thumbColor={biometricsEnabled ? '#fff' : '#f4f3f4'}
-                ios_backgroundColor="#333"
+                trackColor={switchTrackColor}
+                thumbColor={switchThumbColor}
+                ios_backgroundColor={iosBackgroundColor}
                 onValueChange={toggleSwitch}
                 value={biometricsEnabled}
             />
@@ -80,7 +87,7 @@ export default function SettingsScreen() {
                 <Text className="text-foreground font-bold font-mono mb-1">Test Comms</Text>
                 <Text className="text-muted-foreground text-xs font-mono">Verify push notification relay</Text>
             </View>
-            <FontAwesome name="bell-o" size={20} color="#64748b" />
+            <FontAwesome name="bell-o" size={20} color={iconColor} />
         </TouchableOpacity>
       </View>
 

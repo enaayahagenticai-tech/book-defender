@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useThreatStore } from '@/lib/store/threats';
 import { SwipeableThreatCard } from '@/components/tactical/SwipeableThreatCard';
+import { useColorScheme } from '@/components/useColorScheme';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 export default function TakedownScreen() {
   const threats = useThreatStore((state) => state.threats);
@@ -9,6 +11,7 @@ export default function TakedownScreen() {
   const ignoreThreat = useThreatStore((state) => state.ignoreThreat);
   const refreshThreats = useThreatStore((state) => state.refreshThreats);
   const loading = useThreatStore((state) => state.loading);
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     // Refresh threats on mount to ensure we have the latest data
@@ -17,21 +20,25 @@ export default function TakedownScreen() {
 
   // Filter for active/pending threats
   const activeThreats = threats.filter(t => t.status === 'active' || t.status === 'pending');
+  const spinnerColor = colorScheme === 'dark' ? '#fff' : '#000';
 
   if (loading && activeThreats.length === 0) {
       return (
-          <View className="flex-1 items-center justify-center bg-black p-4">
-              <ActivityIndicator size="large" color="#fff" />
-              <Text className="text-gray-500 mt-4 font-mono">LOADING INTEL...</Text>
+          <View className="flex-1 items-center justify-center bg-background p-4">
+              <ActivityIndicator size="large" color={spinnerColor} />
+              <Text className="text-muted-foreground mt-4 font-mono tracking-widest">LOADING INTEL...</Text>
           </View>
       )
   }
 
   if (activeThreats.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center bg-black p-4">
-        <Text className="text-white text-3xl font-bold font-mono mb-4 text-center">ALL CLEAR</Text>
-        <Text className="text-gray-500 text-center">No active threats detected in your sector.</Text>
+      <View className="flex-1 items-center justify-center bg-background p-4">
+        <View className="items-center mb-6 opacity-80">
+            <FontAwesome name="check-circle-o" size={80} color={colorScheme === 'dark' ? '#4ade80' : '#16a34a'} />
+        </View>
+        <Text className="text-foreground text-3xl font-bold font-mono mb-4 text-center tracking-tighter">ALL CLEAR</Text>
+        <Text className="text-muted-foreground text-center font-mono">No active threats detected in your sector.</Text>
       </View>
     );
   }
@@ -45,7 +52,7 @@ export default function TakedownScreen() {
   const stack = activeThreats.slice(0, 3).reverse();
 
   return (
-    <View className="flex-1 bg-black p-4 items-center justify-center">
+    <View className="flex-1 bg-background p-4 items-center justify-center">
       <View className="w-full h-[300px] relative items-center justify-center">
           {stack.map((threat, index) => {
               // index 0 is T3 (bottom), index 2 is T1 (top)
@@ -72,7 +79,7 @@ export default function TakedownScreen() {
           })}
       </View>
        <View className="mt-20 items-center">
-          <Text className="text-gray-500 text-center font-mono text-xs tracking-widest">
+          <Text className="text-muted-foreground text-center font-mono text-[10px] tracking-[0.2em]">
             SWIPE RIGHT TO PURGE{'\n'}SWIPE LEFT TO IGNORE
           </Text>
        </View>

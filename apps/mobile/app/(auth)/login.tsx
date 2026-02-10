@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { Stack } from 'expo-router';
 
@@ -32,83 +32,53 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-background items-center justify-center p-5">
       <Stack.Screen options={{ title: 'Login', headerShown: false }} />
-      <View style={styles.form}>
-        <Text style={styles.title}>Sentinel Scout</Text>
+      <View className="w-full gap-4">
+        <Text className="text-3xl font-bold text-foreground text-center mb-10 font-mono tracking-tighter">
+          SENTINEL<Text className="text-primary">SCOUT</Text>
+        </Text>
+
         <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#666"
+          className="bg-card border border-border p-4 rounded text-foreground text-base font-mono placeholder:text-muted-foreground"
+          placeholder="EMAIL"
+          placeholderTextColor="#64748b" // Fallback for platforms not supporting placeholder: modifier if any, but NativeWind handles it usually via className
           onChangeText={(text) => setEmail(text)}
           value={email}
           autoCapitalize="none"
+          keyboardType="email-address"
         />
+
         <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#666"
+          className="bg-card border border-border p-4 rounded text-foreground text-base font-mono placeholder:text-muted-foreground"
+          placeholder="PASSWORD"
+          placeholderTextColor="#64748b"
           onChangeText={(text) => setPassword(text)}
           value={password}
           secureTextEntry={true}
           autoCapitalize="none"
         />
-        <TouchableOpacity style={styles.button} onPress={signInWithEmail} disabled={loading}>
-          <Text style={styles.buttonText}>Sign In</Text>
+
+        <TouchableOpacity
+          className="bg-primary p-4 rounded items-center mt-2 active:opacity-80"
+          onPress={signInWithEmail}
+          disabled={loading}
+        >
+          <Text className="text-primary-foreground font-bold text-base font-mono tracking-widest">
+            AUTHENTICATE
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryButton} onPress={signUpWithEmail} disabled={loading}>
-          <Text style={styles.secondaryButtonText}>Sign Up</Text>
+
+        <TouchableOpacity
+          className="p-4 items-center active:opacity-60"
+          onPress={signUpWithEmail}
+          disabled={loading}
+        >
+          <Text className="text-muted-foreground text-sm font-mono tracking-widest">
+            REQUEST CLEARANCE
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  form: {
-    gap: 15,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 40,
-    fontFamily: 'SpaceMono', // Using available font
-  },
-  input: {
-    backgroundColor: '#1a1a1a',
-    borderWidth: 1,
-    borderColor: '#333',
-    padding: 15,
-    borderRadius: 8,
-    color: '#fff',
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  secondaryButton: {
-    padding: 15,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#666',
-    fontSize: 16,
-  },
-});
