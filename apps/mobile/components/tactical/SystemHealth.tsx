@@ -10,22 +10,22 @@ interface SystemHealthProps {
 }
 
 export function SystemHealth({ status, uptime, lastScan }: SystemHealthProps) {
-  const statusColor = status === 'online' ? 'bg-green-500' : status === 'offline' ? 'bg-red-500' : 'bg-yellow-500';
+  const statusColor = status === 'online' ? 'bg-success' : status === 'offline' ? 'bg-destructive' : 'bg-warning';
 
   return (
-    <View className="bg-gray-900 p-4 rounded-lg mb-6 border border-gray-800">
+    <View className="bg-card p-4 rounded-lg mb-6 border border-border">
       <View className="flex-row items-center mb-4">
         <View className={twMerge("w-3 h-3 rounded-full mr-2", statusColor)} />
-        <Text className="text-white font-bold text-lg uppercase tracking-wider">System Status: {status}</Text>
+        <Text className="text-foreground font-bold text-lg uppercase tracking-wider">System Status: {status}</Text>
       </View>
       <View className="flex-row justify-between">
         <View>
-          <Text className="text-gray-500 text-xs uppercase mb-1">Uptime</Text>
-          <Text className="text-white font-mono">{uptime}</Text>
+          <Text className="text-muted-foreground text-xs uppercase mb-1 font-mono">Uptime</Text>
+          <Text className="text-foreground font-mono">{uptime}</Text>
         </View>
         <View>
-          <Text className="text-gray-500 text-xs uppercase mb-1">Last Scan</Text>
-          <Text className="text-white font-mono">{lastScan}</Text>
+          <Text className="text-muted-foreground text-xs uppercase mb-1 font-mono">Last Scan</Text>
+          <Text className="text-foreground font-mono">{lastScan}</Text>
         </View>
       </View>
     </View>
