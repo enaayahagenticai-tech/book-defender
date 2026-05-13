@@ -94,7 +94,7 @@ export function SwipeableThreatCard({
           {/* Header */}
           <View style={styles.row}>
             <MonoText size={9} color={C.fg3} style={styles.label}>
-              {threat.id.slice(0, 8).toUpperCase()} · PIRATED PDF
+              {threat.id.slice(0, 8).toUpperCase()} · {(threat.threatType ?? threat.tags?.[0] ?? 'THREAT').toUpperCase()}
             </MonoText>
             <MonoText size={10} weight="700" color={accent} style={styles.label}>
               ⚠ {threat.riskScore}
@@ -138,8 +138,9 @@ export function SwipeableThreatCard({
 
           {/* Tags */}
           <View style={styles.tags}>
-            <Tag label="PIRATED PDF" />
-            <Tag label="EU/EN" />
+            {(threat.tags?.length ? threat.tags : ['PIRATED PDF']).map((tag) => (
+              <Tag key={tag} label={tag.toUpperCase()} />
+            ))}
           </View>
 
           {/* Swipe hints */}

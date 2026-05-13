@@ -8,28 +8,39 @@ import { useThreatStore } from '@/lib/store/threats';
 import { dispatchTakedown } from '@/lib/api/scan';
 import { C, FONT, riskColor } from '@/constants/Theme';
 
-const REGISTRY_ROWS = [
-  { id: 'T-2031', domain: 'freebooks-vault[.]ru/atlas-of-fog', status: 'pending' as const, risk: 96 },
-  { id: 'T-2024', domain: 'lit-mirror[.]to/shadow-archive',   status: 'active'  as const, risk: 88 },
-  { id: 'T-2018', domain: 'phish-readers[.]xyz/login',         status: 'active'  as const, risk: 82 },
-];
+function formatTimestamp(): string {
+  const now = new Date();
+  const hh = String(now.getUTCHours()).padStart(2, '0');
+  const mm = String(now.getUTCMinutes()).padStart(2, '0');
+  const ss = String(now.getUTCSeconds()).padStart(2, '0');
+  return `ACTIONED · ${hh}:${mm}:${ss}Z`;
+}
 
 export default function ResolutionScreen() {
   const router = useRouter();
   const { threatId } = useLocalSearchParams<{ threatId: string }>();
-  const threat = useThreatStore((s) => s.threats.find((t) => t.id === threatId));
+  const threats = useThreatStore((s) => s.threats);
+  const threat = threats.find((t) => t.id === threatId);
   const resolveThreat = useThreatStore((s) => s.resolveThreat);
+
+  // Next 3 active/pending threats excluding the one just resolved
+  const nextQueue = threats
+    .filter((t) => (t.status === 'active' || t.status === 'pending') && t.id !== threatId)
+    .slice(0, 3);
+
+  const actionedAt = React.useRef(formatTimestamp()).current;
 
   useEffect(() => {
     if (!threatId) return;
     resolveThreat(threatId);
     if (threat?.domain) dispatchTakedown(threatId, threat.domain);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threatId]);
 
   return (
     <View style={styles.screen}>
       <ScreenHeader
-        subtitle="ACTIONED · 14:11:08Z"
+        subtitle={actionedAt}
         title="Purged"
         right={
           <MonoText size={11} weight="700" color={C.success} style={{ letterSpacing: 3 }}>✓</MonoText>
@@ -65,16 +76,25 @@ export default function ResolutionScreen() {
         </View>
 
         {/* Registry queue */}
-        <View style={{ marginTop: 18 }}>
-          <MonoText size={10} weight="700" color={C.fg2} style={[styles.label, { marginBottom: 8 }]}>
-            REGISTRY · NEXT IN QUEUE
-          </MonoText>
-          <View style={styles.regList}>
-            {REGISTRY_ROWS.map((row) => (
-              <RegRow key={row.id} {...row} />
-            ))}
+        {nextQueue.length > 0 && (
+          <View style={{ marginTop: 18 }}>
+            <MonoText size={10} weight="700" color={C.fg2} style={[styles.label, { marginBottom: 8 }]}>
+              REGISTRY · NEXT IN QUEUE
+            </MonoText>
+            <View style={styles.regList}>
+              {nextQueue.map((row) => (
+                <RegRow
+                  key={row.id}
+                  id={row.id}
+                  domain={row.domain}
+                  status={row.status as 'active' | 'pending'}
+                  risk={row.riskScore}
+                  threatType={row.threatType}
+                />
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* CTA */}
         <TouchableOpacity
@@ -94,15 +114,17 @@ export default function ResolutionScreen() {
 }
 
 function RegRow({
-  id, domain, status, risk,
-}: { id: string; domain: string; status: 'active' | 'pending'; risk: number }) {
+  id, domain, status, risk, threatType,
+}: { id: string; domain: string; status: 'active' | 'pending'; risk: number; threatType?: string }) {
   const accent = riskColor(risk);
   const statusColor = status === 'pending' ? C.warning : C.destructive;
 
   return (
     <View style={[styles.regRow, { borderLeftColor: accent }]}>
       <View style={styles.rowBetween}>
-        <MonoText size={9} color={C.fg3} style={styles.label}>{id} · PIRATED PDF</MonoText>
+        <MonoText size={9} color={C.fg3} style={styles.label}>
+          {id.slice(0, 8).toUpperCase()} · {(threatType ?? 'PIRATED PDF').toUpperCase()}
+        </MonoText>
         <MonoText size={9} weight="700" color={statusColor} style={styles.label}>
           {status.toUpperCase()}
         </MonoText>

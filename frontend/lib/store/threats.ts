@@ -10,6 +10,18 @@ export interface Threat {
   domain: string;
   riskScore: number;
   status: 'active' | 'pending' | 'resolved' | 'ignored';
+  // Extended fields populated by ADK agent
+  host?: string;
+  registrar?: string;
+  firstSeen?: string;
+  mirrorCount?: number;
+  threatType?: string;
+  analysisText?: string;
+  tags?: string[];
+  fingerprint?: string;
+  matchPercentage?: number;
+  bookTitle?: string;
+  bookAuthor?: string;
 }
 
 interface ThreatState {
@@ -28,16 +40,7 @@ interface ThreatState {
 export const useThreatStore = create<ThreatState>()(
   persist(
     (set, get) => ({
-      threats: [
-        // Initial Mock Data (Fallback)
-        { id: 'T-001', domain: 'phish-bank.com', riskScore: 98, status: 'active' },
-        { id: 'T-002', domain: 'secure-login-update.net', riskScore: 85, status: 'pending' },
-        { id: 'T-003', domain: 'update-your-account.org', riskScore: 45, status: 'resolved' },
-        { id: 'T-004', domain: 'malicious-server.xyz', riskScore: 92, status: 'active' },
-        { id: 'T-005', domain: 'fake-promo.biz', riskScore: 78, status: 'pending' },
-        { id: 'T-006', domain: 'urgent-verify-id.net', riskScore: 88, status: 'active' },
-        { id: 'T-007', domain: 'free-gift-card.com', riskScore: 65, status: 'pending' },
-      ],
+      threats: [],
       loading: false,
       error: null,
       setThreats: (threats) => set({ threats }),

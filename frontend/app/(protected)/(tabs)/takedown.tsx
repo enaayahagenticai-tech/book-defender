@@ -3,9 +3,11 @@ import {
   View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { useThreatStore } from '@/lib/store/threats';
 import { SwipeableThreatCard } from '@/components/tactical/SwipeableThreatCard';
 import { MonoText, ScreenHeader } from '@/components/tactical/Primitives';
+import { useToastStore } from '@/lib/store/toast';
 import { C, FONT } from '@/constants/Theme';
 
 const { width: SW } = Dimensions.get('window');
@@ -23,6 +25,25 @@ export default function TakedownScreen() {
   const handlePurge = (id: string) => router.push(`/evidence?threatId=${id}` as never);
   // Left swipe = ignore (mark in DB, remove from queue)
   const handleIgnore = (id: string) => ignoreThreat(id);
+
+  const handleVerify = async () => {
+    const showToast = useToastStore.getState().showToast;
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const isEnrolled  = await LocalAuthentication.isEnrolledAsync();
+    if (!hasHardware || !isEnrolled) {
+      showToast({ type: 'info', title: 'VERIFY', message: 'Biometric hardware not available.' });
+      return;
+    }
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Verify identity to proceed with takedown',
+      fallbackLabel: 'Use Passcode',
+    });
+    if (result.success) {
+      showToast({ type: 'success', title: 'IDENTITY VERIFIED', message: 'Operator authenticated.' });
+    } else {
+      showToast({ type: 'error', title: 'VERIFICATION FAILED', message: 'Authentication rejected.' });
+    }
+  };
 
   const queue = threats.filter((t) => t.status === 'active' || t.status === 'pending');
   const queueLabel = `${queue.length > 0 ? 1 : 0}/${queue.length}`;
@@ -109,7 +130,7 @@ export default function TakedownScreen() {
           <MonoText size={9} color={C.fg3} style={{ letterSpacing: 3, marginBottom: 4 }}>
             VERIFY
           </MonoText>
-          <TouchableOpacity style={[styles.circleBtn, styles.verifyBtn]} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.circleBtn, styles.verifyBtn]} activeOpacity={0.7} onPress={handleVerify}>
             <Text style={[styles.circleBtnGlyph, { color: C.primary, fontSize: 20 }]}>◉</Text>
           </TouchableOpacity>
         </View>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, TouchableOpacity, StyleSheet, ScrollView,
+  View, TouchableOpacity, StyleSheet, ScrollView, Share,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MonoText, ScreenHeader, Dot } from '@/components/tactical/Primitives';
@@ -70,6 +70,25 @@ export default function EvidenceScreen() {
   const progress = Math.round((completedCount / pipeline.length) * 100);
   const latest = evidenceRows[0] ?? null;
   const noticeId = threat?.id?.toUpperCase() ?? 'XXXX';
+
+  const handleExport = async () => {
+    const lines = [
+      `BOOKSENTINEL EVIDENCE NOTICE — ${noticeId}`,
+      `Domain: ${threat?.domain ?? 'unknown'}`,
+      `Risk Score: ${threat?.riskScore ?? '—'}`,
+      `Evidence Items: ${evidenceRows.length}`,
+      '',
+      'FORENSIC PIPELINE:',
+      ...pipeline.map((p) => `  ${p.ok === true ? '✓' : p.ok === 'live' ? '·' : '○'} ${p.label}`),
+      '',
+      latest?.hash ? `SHA-256: ${latest.hash}` : '',
+      latest?.confidence_percentage != null ? `Content Match: ${latest.confidence_percentage}%` : '',
+      '',
+      `Generated: ${new Date().toISOString()}`,
+    ].filter(Boolean).join('\n');
+
+    await Share.share({ message: lines, title: `NOTICE-${noticeId}.PDF` });
+  };
 
   return (
     <View style={styles.screen}>
@@ -179,7 +198,7 @@ export default function EvidenceScreen() {
               DISPATCH TAKEDOWN →
             </MonoText>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.ghostBtn} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.ghostBtn} activeOpacity={0.8} onPress={handleExport}>
             <MonoText size={12} color={C.fg2} style={{ letterSpacing: 3 }}>
               EXPORT PDF TO LEGAL
             </MonoText>

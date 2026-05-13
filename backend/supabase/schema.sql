@@ -72,6 +72,19 @@ create policy "Authenticated users can update registry entries."
 create policy "Authenticated users can delete registry entries."
   on registry_entries for delete using ( auth.role() = 'authenticated' );
 
+-- Extend threats table with ADK-populated fields
+alter table public.threats add column if not exists host text;
+alter table public.threats add column if not exists registrar text;
+alter table public.threats add column if not exists "firstSeen" timestamp with time zone;
+alter table public.threats add column if not exists "mirrorCount" integer default 0;
+alter table public.threats add column if not exists "threatType" text;
+alter table public.threats add column if not exists "analysisText" text;
+alter table public.threats add column if not exists tags text[] default '{}';
+alter table public.threats add column if not exists fingerprint text;
+alter table public.threats add column if not exists "matchPercentage" numeric(5,2);
+alter table public.threats add column if not exists "bookTitle" text;
+alter table public.threats add column if not exists "bookAuthor" text;
+
 -- Set up Realtime for threats
 do $$
 begin

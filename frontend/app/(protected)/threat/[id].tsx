@@ -7,6 +7,16 @@ import { useThreatStore } from '@/lib/store/threats';
 import { MonoText, FourCorners, RiskBar, ScreenHeader, Tag } from '@/components/tactical/Primitives';
 import { C, FONT, riskColor } from '@/constants/Theme';
 
+function relativeTime(iso?: string): string {
+  if (!iso) return 'UNKNOWN';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ${mins % 60}m ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
 export default function ThreatDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -43,7 +53,9 @@ export default function ThreatDetailScreen() {
         <View style={[styles.heroCard, { borderLeftColor: accent }]}>
           <FourCorners color={C.destructive} />
           <View style={styles.rowBetween}>
-            <MonoText size={10} color={C.fg3} style={styles.label}>PIRATED PDF · 14 MIRRORS</MonoText>
+            <MonoText size={10} color={C.fg3} style={styles.label}>
+              {(threat.threatType ?? 'PIRATED PDF').toUpperCase()} · {threat.mirrorCount ?? 0} MIRRORS
+            </MonoText>
             <MonoText size={11} weight="700" color={accent} style={styles.label}>
               ⚠ RISK {threat.riskScore}
             </MonoText>
@@ -55,59 +67,71 @@ export default function ThreatDetailScreen() {
             <RiskBar value={threat.riskScore} />
           </View>
           <View style={styles.fieldGrid}>
-            <FieldCell label="HOST"       value="OVHcloud · RU" />
-            <FieldCell label="REGISTRAR"  value="r01-registrar" />
-            <FieldCell label="FIRST SEEN" value="2h 14m ago" />
-            <FieldCell label="MIRRORS"    value="14 detected" />
+            <FieldCell label="HOST"       value={threat.host ?? 'UNKNOWN'} />
+            <FieldCell label="REGISTRAR"  value={threat.registrar ?? 'UNKNOWN'} />
+            <FieldCell label="FIRST SEEN" value={relativeTime(threat.firstSeen)} />
+            <FieldCell label="MIRRORS"    value={threat.mirrorCount != null ? `${threat.mirrorCount} detected` : 'UNKNOWN'} />
           </View>
         </View>
 
         {/* Matched book */}
-        <SectionBlock title="MATCHED BOOK">
-          <View style={styles.bookRow}>
-            <View style={styles.bookCover}>
-              <MonoText size={6} weight="700" color="#E8DCC4" style={{ letterSpacing: 2, textAlign: 'center' }}>
-                VANGUARD
-              </MonoText>
-              <View>
-                <MonoText size={7} color="#E8DCC4" style={{ textAlign: 'center' }}>ATLAS</MonoText>
-                <MonoText size={7} color="#E8DCC4" style={{ textAlign: 'center' }}>OF FOG</MonoText>
+        {(threat.bookTitle || threat.bookAuthor) && (
+          <SectionBlock title="MATCHED BOOK">
+            <View style={styles.bookRow}>
+              <View style={styles.bookCover}>
+                <MonoText size={6} weight="700" color="#E8DCC4" style={{ letterSpacing: 2, textAlign: 'center' }}>
+                  {(threat.bookTitle ?? '').split(' ')[0]?.toUpperCase() ?? ''}
+                </MonoText>
+                <View>
+                  {(threat.bookTitle ?? '').split(' ').slice(1).map((word, i) => (
+                    <MonoText key={i} size={7} color="#E8DCC4" style={{ textAlign: 'center' }}>{word.toUpperCase()}</MonoText>
+                  ))}
+                </View>
+                <MonoText size={5} color="rgba(232,220,196,0.7)" style={{ letterSpacing: 2, textAlign: 'center' }}>
+                  {(threat.bookAuthor ?? '').toUpperCase()}
+                </MonoText>
               </View>
-              <MonoText size={5} color="rgba(232,220,196,0.7)" style={{ letterSpacing: 2, textAlign: 'center' }}>
-                E. MARWICK
-              </MonoText>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.bookTitle}>{threat.bookTitle ?? 'Unknown Title'}</Text>
+                <MonoText size={11} color={C.fg2} style={{ marginTop: 2 }}>
+                  {threat.bookAuthor ?? 'Unknown Author'}
+                </MonoText>
+                {threat.fingerprint && (
+                  <MonoText size={11} color={C.fg3} style={{ marginTop: 8, letterSpacing: 1 }}>
+                    {'Fingerprint: '}
+                    <Text style={{ color: C.fg1, fontWeight: '600' }}>{threat.fingerprint}</Text>
+                  </MonoText>
+                )}
+                {threat.matchPercentage != null && (
+                  <MonoText size={11} color={C.fg3} style={{ marginTop: 2, letterSpacing: 1 }}>
+                    {'Content match: '}
+                    <Text style={{ color: C.success, fontWeight: '700' }}>{threat.matchPercentage.toFixed(1)}%</Text>
+                  </MonoText>
+                )}
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bookTitle}>Atlas of Fog</Text>
-              <MonoText size={11} color={C.fg2} style={{ marginTop: 2 }}>
-                E. Marwick · Vanguard Press · 2024
-              </MonoText>
-              <MonoText size={11} color={C.fg3} style={{ marginTop: 8, letterSpacing: 1 }}>
-                {'Fingerprint: '}
-                <Text style={{ color: C.fg1, fontWeight: '600' }}>0xA4E1…2F09</Text>
-              </MonoText>
-              <MonoText size={11} color={C.fg3} style={{ marginTop: 2, letterSpacing: 1 }}>
-                {'Content match: '}
-                <Text style={{ color: C.success, fontWeight: '700' }}>98.7%</Text>
-              </MonoText>
-            </View>
-          </View>
-        </SectionBlock>
+          </SectionBlock>
+        )}
 
         {/* Gemini analysis */}
-        <SectionBlock title="GEMINI · TRIAGE">
-          <View style={styles.analysisCard}>
-            <MonoText size={11} color={C.fg1} style={{ lineHeight: 18 }}>
-              Direct PDF mirror with intact ISBN + cover. Host is on a known repeat-infringer ASN.
-              DDoS-protected behind Cloudflare; counter-notice unlikely.
-            </MonoText>
-            <View style={styles.tags}>
-              {['PIRATED PDF', 'REPEAT INFRINGER', 'NO COUNTER LIKELY', 'EU/EN'].map((t) => (
-                <Tag key={t} label={t} />
-              ))}
+        {(threat.analysisText || (threat.tags && threat.tags.length > 0)) && (
+          <SectionBlock title="GEMINI · TRIAGE">
+            <View style={styles.analysisCard}>
+              {threat.analysisText && (
+                <MonoText size={11} color={C.fg1} style={{ lineHeight: 18 }}>
+                  {threat.analysisText}
+                </MonoText>
+              )}
+              {threat.tags && threat.tags.length > 0 && (
+                <View style={styles.tags}>
+                  {threat.tags.map((t) => (
+                    <Tag key={t} label={t.toUpperCase()} />
+                  ))}
+                </View>
+              )}
             </View>
-          </View>
-        </SectionBlock>
+          </SectionBlock>
+        )}
 
         {/* CTAs */}
         <View style={styles.ctaBlock}>
