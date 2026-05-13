@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BookSentinel — Surveillance for Intellectual Property</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg-0:#F4EDDF;          /* Cream page */
+    --bg-1:#ECE2CC;          /* Biscuit */
+    --bg-2:#FAF6EC;          /* Card / off-white */
+    --bg-3:#E2D5BA;
+    --line:rgba(64,38,22,.10);
+    --line-2:rgba(64,38,22,.22);
+    --fg-1:#2A1810;          /* Ink brown */
+    --fg-2:#5C4632;          /* Medium brown */
+    --fg-3:#8B7355;          /* Warm gray-brown */
+    --fg-4:#B8A687;
+    --primary:#C15F3C;       /* Claude coral-brown */
+    --primary-2:#D97757;
+    --primary-soft:rgba(193,95,60,.12);
+    --success:#6B7F4A;       /* Olive moss */
+    --warning:#C8841C;       /* Amber */
+    --destructive:#A4361F;   /* Warm rust */
+    --destructive-soft:rgba(164,54,31,.08);
+  }
+  *{ -webkit-font-smoothing:antialiased; }
+  html,body{ background:var(--bg-0); color:var(--fg-1); }
+  body{ font-family:"Inter",ui-sans-serif,system-ui,sans-serif; font-feature-settings:"ss01","cv11"; }
+  .mono{ font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-feature-settings:"zero","ss01"; }
+
+  /* Grid overlay */
+  .grid-bg{
+    background-image:
+      linear-gradient(to right, rgba(64,38,22,.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(64,38,22,.08) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .grid-bg-fine{
+    background-image:
+      linear-gradient(to right, rgba(64,38,22,.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(64,38,22,.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Warm radial wash */
+  .radial-fade{
+    background:
+      radial-gradient(900px 480px at 18% 12%, rgba(193,95,60,.18), transparent 60%),
+      radial-gradient(620px 380px at 92% 30%, rgba(107,127,74,.10), transparent 65%);
+  }
+
+  /* Scanline shimmer for HUD */
+  @keyframes scan { 0%{transform:translateY(-100%);} 100%{transform:translateY(800%);} }
+  .scanline{ position:absolute; left:0; right:0; height:60px; background:linear-gradient(180deg, transparent, rgba(193,95,60,.07), transparent); animation: scan 6s linear infinite; pointer-events:none; }
+
+  /* Paper card */
+  .glass{
+    background: linear-gradient(180deg, rgba(255,253,247,.85), rgba(250,244,232,.65));
+    border:1px solid var(--line-2);
+    box-shadow: 0 1px 0 rgba(64,38,22,.04), 0 8px 24px -16px rgba(64,38,22,.18);
+    backdrop-filter: blur(6px);
+  }
+  .glass-2{
+    background: linear-gradient(180deg, #FCF8ED, #F5EDDA);
+    border:1px solid var(--line-2);
+    box-shadow: 0 1px 0 rgba(64,38,22,.04), 0 18px 48px -28px rgba(64,38,22,.25);
+  }
+
+  /* Subtle border-cross corner */
+  .corner{ position:absolute; width:10px; height:10px; border-color:var(--primary); }
+  .corner.tl{ top:-1px; left:-1px; border-top:1px solid; border-left:1px solid; }
+  .corner.tr{ top:-1px; right:-1px; border-top:1px solid; border-right:1px solid; }
+  .corner.bl{ bottom:-1px; left:-1px; border-bottom:1px solid; border-left:1px solid; }
+  .corner.br{ bottom:-1px; right:-1px; border-bottom:1px solid; border-right:1px solid; }
+
+  /* Status dot */
+  @keyframes pulse-dot { 0%,100%{ box-shadow:0 0 0 0 currentColor; opacity:1; } 50%{ box-shadow:0 0 0 8px transparent; opacity:.55; } }
+  .pulse-dot{ animation:pulse-dot 1.8s ease-in-out infinite; }
+
+  /* Marquee */
+  @keyframes mq { from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .marquee-track{ animation: mq 60s linear infinite; }
+
+  /* Buttons */
+  .btn-primary{ background:var(--primary); color:#FFF8EC; transition:filter .15s ease, transform .05s ease; }
+  .btn-primary:hover{ filter:brightness(1.05) saturate(1.05); }
+  .btn-primary:active{ transform:translateY(1px); }
+  .btn-ghost{ border:1px solid var(--line-2); color:var(--fg-1); background:rgba(255,253,247,.5); transition: background .15s, border-color .15s; }
+  .btn-ghost:hover{ background:rgba(64,38,22,.06); border-color:rgba(64,38,22,.36); }
+
+  /* Threat card border accent */
+  .threat-line-l{ box-shadow: inset 3px 0 0 0 var(--destructive); }
+  .threat-line-w{ box-shadow: inset 3px 0 0 0 var(--warning); }
+  .threat-line-s{ box-shadow: inset 3px 0 0 0 var(--success); }
+
+  /* Swipe demo card stack */
+  .swipe-card{ transition: transform .35s cubic-bezier(.2,.7,.2,1), opacity .25s ease; will-change: transform; }
+  .swipe-card.gone-right{ transform: translateX(160%) rotate(18deg) !important; opacity:0; }
+  .swipe-card.gone-left{ transform: translateX(-160%) rotate(-18deg) !important; opacity:0; }
+
+  /* Type details */
+  .eyebrow{ font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.28em; color:var(--fg-2); text-transform:uppercase; }
+  .h-display{ font-weight:700; letter-spacing:-0.035em; line-height:.96; }
+  .ticker { font-variant-numeric: tabular-nums; }
+
+  /* Riser bars */
+  .riser{ background: linear-gradient(180deg, var(--primary) 0%, rgba(193,95,60,.22) 100%); }
+
+  /* Section divider tag */
+  .tag-row{ display:flex; align-items:center; gap:14px; color:var(--fg-3); }
+  .tag-row .ln{ height:1px; flex:1; background:var(--line); }
+
+  /* Hover lift */
+  .lift{ transition: transform .25s ease, border-color .25s ease, background .25s ease; }
+  .lift:hover{ transform:translateY(-2px); border-color: rgba(64,38,22,.28); }
+
+  /* Selection */
+  ::selection{ background:rgba(193,95,60,.30); color:var(--fg-1); }
+
+  /* Custom scrollbar (subtle) */
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:#C7B79A; border-radius:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+
+  /* hide x-overflow on marquee parent */
+  .clip-x{ overflow:hidden; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ========================= NAV ========================= -->
+<header class="fixed top-0 inset-x-0 z-50">
+  <div class="mx-auto max-w-[1320px] px-6">
+    <nav class="mt-4 flex items-center justify-between rounded-md glass px-4 py-3" data-screen-label="nav">
+      <a href="#" class="flex items-center gap-2.5">
+        <!-- Logo mark -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2 3 5v6c0 5 3.8 9.5 9 11 5.2-1.5 9-6 9-11V5l-9-3Z" stroke="#C15F3C" stroke-width="1.6"/>
+          <path d="M12 7v10M7 12h10" stroke="#C15F3C" stroke-width="1.6"/>
+        </svg>
+        <span class="mono text-[13px] tracking-[.22em] font-semibold">BOOK<span style="color:var(--primary)">SENTINEL</span></span>
+      </a>
+      <ul class="hidden lg:flex items-center gap-7 mono text-[12px] tracking-[.16em] uppercase text-[color:var(--fg-2)]">
+        <li><a href="#platform" class="hover:text-[color:var(--fg-1)]">Platform</a></li>
+        <li><a href="#takedown" class="hover:text-[color:var(--fg-1)]">Takedowns</a></li>
+        <li><a href="#registry" class="hover:text-[color:var(--fg-1)]">Registry</a></li>
+        <li><a href="#security" class="hover:text-[color:var(--fg-1)]">Security</a></li>
+        <li><a href="#pricing" class="hover:text-[color:var(--fg-1)]">Pricing</a></li>
+      </ul>
+      <div class="flex items-center gap-2">
+        <div class="hidden md:flex items-center gap-2 mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-2)] px-3 py-1.5 rounded border" style="border-color:var(--line-2)">
+          <span class="inline-block w-1.5 h-1.5 rounded-full pulse-dot" style="background:var(--success); color:var(--success)"></span>
+          <span>All Systems</span>
+        </div>
+        <a href="#cta" class="btn-ghost mono text-[11px] tracking-[.22em] uppercase px-3.5 py-2 rounded">Sign in</a>
+        <a href="#cta" class="btn-primary mono text-[11px] font-semibold tracking-[.22em] uppercase px-3.5 py-2 rounded">Request Clearance</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- ========================= HERO ========================= -->
+<section class="relative pt-36 pb-24 overflow-hidden" data-screen-label="hero">
+  <div class="absolute inset-0 grid-bg opacity-[.55]"></div>
+  <div class="absolute inset-0 radial-fade"></div>
+  <!-- Vignette -->
+  <div class="absolute inset-x-0 bottom-0 h-40 pointer-events-none" style="background:linear-gradient(180deg, transparent, var(--bg-0));"></div>
+
+  <div class="relative mx-auto max-w-[1320px] px-6 grid lg:grid-cols-12 gap-10 items-center">
+    <!-- Left: copy -->
+    <div class="lg:col-span-7">
+      <div class="flex items-center gap-3 mono text-[11px] tracking-[.28em] uppercase text-[color:var(--fg-2)]">
+        <span class="inline-block w-1.5 h-1.5 rounded-full pulse-dot" style="background:var(--primary); color:var(--primary)"></span>
+        <span>Tactical Surveillance · v4.12 LIVE</span>
+      </div>
+      <h1 class="h-display mt-6 text-5xl sm:text-6xl lg:text-[78px]">
+        Defend every page.<br/>
+        <span style="color:var(--fg-2)">Neutralize every</span>
+        <span class="relative inline-block">
+          threat.
+          <svg class="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 320 10" fill="none">
+            <path d="M2 6c80-8 160-8 316 0" stroke="#C15F3C" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+      </h1>
+      <p class="mt-6 max-w-xl text-[17px] leading-relaxed text-[color:var(--fg-2)]">
+        BookSentinel is a mobile-first command platform built for traditional book publishers. We continuously monitor the global threat landscape for pirated PDFs, ebook mirrors, and phishing sites — and let your operators authorize takedowns in seconds, with biometric verification.
+      </p>
+      <div class="mt-9 flex flex-wrap items-center gap-3">
+        <a href="#cta" class="btn-primary mono text-[12px] font-semibold tracking-[.22em] uppercase px-5 py-3.5 rounded inline-flex items-center gap-2">
+          Deploy a Scout
+          <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        </a>
+        <a href="#takedown" class="btn-ghost mono text-[12px] tracking-[.22em] uppercase px-5 py-3.5 rounded inline-flex items-center gap-2">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i>
+          See takedown demo
+        </a>
+      </div>
+
+      <!-- Inline stats -->
+      <div class="mt-12 grid grid-cols-3 max-w-lg gap-6">
+        <div>
+          <div class="mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Threats Purged</div>
+          <div class="mt-1 text-3xl font-semibold ticker" data-counter data-target="184302">0</div>
+        </div>
+        <div>
+          <div class="mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Domains Monitored</div>
+          <div class="mt-1 text-3xl font-semibold ticker" data-counter data-target="6200000" data-suffix="">0</div>
+        </div>
+        <div>
+          <div class="mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Median MTTR</div>
+          <div class="mt-1 text-3xl font-semibold ticker"><span data-counter data-target="42">0</span><span class="text-base text-[color:var(--fg-2)] ml-1">min</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: HUD device card -->
+    <div class="lg:col-span-5 relative">
+      <div class="relative glass-2 rounded-md overflow-hidden">
+        <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        <div class="scanline"></div>
+        <!-- top strip -->
+        <div class="px-5 py-3 border-b flex items-center justify-between" style="border-color:var(--line)">
+          <div class="flex items-center gap-2 mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-2)]">
+            <i data-lucide="radar" class="w-3.5 h-3.5" style="color:var(--primary)"></i>
+            Command Center
+          </div>
+          <div class="mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]" id="hudTime">00:00:00 UTC</div>
+        </div>
+
+        <div class="p-5 grid-bg-fine">
+          <!-- System health row -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="rounded border p-3" style="border-color:var(--line)">
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Status</div>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="inline-block w-1.5 h-1.5 rounded-full pulse-dot" style="background:var(--success); color:var(--success)"></span>
+                <span class="mono text-sm font-semibold" style="color:var(--success)">ONLINE</span>
+              </div>
+            </div>
+            <div class="rounded border p-3" style="border-color:var(--line)">
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Uptime</div>
+              <div class="mt-1 mono text-sm font-semibold">312d 04h</div>
+            </div>
+            <div class="rounded border p-3" style="border-color:var(--line)">
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Last Scan</div>
+              <div class="mt-1 mono text-sm font-semibold" style="color:var(--primary)">12s ago</div>
+            </div>
+          </div>
+
+          <!-- Mini chart -->
+          <div class="mt-4 rounded border p-4" style="border-color:var(--line)">
+            <div class="flex items-baseline justify-between">
+              <div>
+                <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Detection Velocity · 24h</div>
+                <div class="mt-1 text-2xl font-semibold ticker">1,284<span class="text-sm text-[color:var(--fg-2)] ml-1">events</span></div>
+              </div>
+              <div class="mono text-[11px] px-2 py-1 rounded" style="background:rgba(107,127,74,.12); color:var(--success)">▲ 12.4%</div>
+            </div>
+            <div class="mt-3 flex items-end gap-1 h-16">
+              <!-- bars -->
+              <script>/* purely visual */</script>
+              <div class="riser flex-1 rounded-sm" style="height:24%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:36%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:28%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:48%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:42%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:62%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:54%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:72%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:68%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:84%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:78%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:92%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:66%"></div>
+              <div class="riser flex-1 rounded-sm" style="height:88%"></div>
+            </div>
+          </div>
+
+          <!-- Active threat preview -->
+          <div class="mt-4 rounded border p-3 threat-line-l" style="border-color:var(--line); background:rgba(164,54,31,.04)">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="alert-triangle" class="w-4 h-4" style="color:var(--destructive)"></i>
+                <div class="mono text-[10px] tracking-[.22em] uppercase" style="color:var(--destructive)">High Risk · 96</div>
+              </div>
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">T-2031</div>
+            </div>
+            <div class="mt-1.5 mono font-semibold text-sm">freebooks-vault[.]ru/atlas-of-fog</div>
+            <div class="mt-0.5 mono text-[11px] text-[color:var(--fg-3)]">Pirated PDF · 14 mirrors · DDoS-protected host</div>
+          </div>
+
+          <!-- Live logs -->
+          <div class="mt-4 rounded border" style="border-color:var(--line)">
+            <div class="px-3 py-2 border-b flex items-center justify-between" style="border-color:var(--line)">
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Live Logs · /var/sentinel</div>
+              <div class="mono text-[10px] tracking-[.22em] uppercase" style="color:var(--success)">STREAMING</div>
+            </div>
+            <div id="liveLogs" class="px-3 py-2 mono text-[11px] leading-relaxed text-[color:var(--fg-2)] h-[88px] overflow-hidden">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating chip -->
+      <div class="absolute -left-6 -bottom-6 glass rounded px-3 py-2.5 hidden md:flex items-center gap-2.5">
+        <i data-lucide="scan-face" class="w-4 h-4" style="color:var(--primary)"></i>
+        <div>
+          <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Biometric</div>
+          <div class="mono text-[11px] font-semibold">FaceID Verified</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= TRUST MARQUEE ========================= -->
+<section class="relative border-y" style="border-color:var(--line)">
+  <div class="mx-auto max-w-[1320px] px-6 py-6 flex items-center gap-8">
+    <div class="shrink-0 mono text-[10.5px] tracking-[.28em] uppercase text-[color:var(--fg-3)] hidden md:block">Trusted by rights teams at</div>
+    <div class="clip-x flex-1">
+      <div class="marquee-track flex items-center gap-16 whitespace-nowrap mono text-[12.5px] tracking-[.32em] uppercase text-[color:var(--fg-2)] w-max">
+        <!-- duplicate set for seamless loop -->
+        <span>Vanguard Press</span><span>· Atlas Publishing</span><span>· Harker &amp; Vale</span><span>· Nineveh Books</span><span>· Mariner House</span><span>· Penumbra Editions</span><span>· Holloway Imprint</span><span>· Northbound Lit</span><span>· Vanguard Press</span><span>· Atlas Publishing</span><span>· Harker &amp; Vale</span><span>· Nineveh Books</span><span>· Mariner House</span><span>· Penumbra Editions</span><span>· Holloway Imprint</span><span>· Northbound Lit</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= PLATFORM / FEATURES ========================= -->
+<section id="platform" class="relative py-28" data-screen-label="platform">
+  <div class="mx-auto max-w-[1320px] px-6">
+    <div class="flex items-end justify-between gap-10 flex-wrap">
+      <div class="max-w-2xl">
+        <div class="tag-row">
+          <span class="mono text-[11px] tracking-[.28em] uppercase">/01 · The Platform</span>
+          <span class="ln"></span>
+        </div>
+        <h2 class="h-display mt-6 text-4xl sm:text-5xl lg:text-6xl">
+          A command surface, not a dashboard.
+        </h2>
+        <p class="mt-5 text-[16.5px] text-[color:var(--fg-2)] max-w-xl">
+          Four mission-grade modules, designed for operators who move faster than the threat landscape. No analytics theatre. No vanity charts. Just signal, decision, action.
+        </p>
+      </div>
+      <a href="#cta" class="mono text-[11px] tracking-[.22em] uppercase btn-ghost px-4 py-2.5 rounded inline-flex items-center gap-2">
+        Spec sheet <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+      </a>
+    </div>
+
+    <div class="mt-14 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Feature card 1 -->
+      <article class="relative glass rounded p-6 lift">
+        <div class="flex items-center justify-between">
+          <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">/A</div>
+          <i data-lucide="radar" class="w-5 h-5" style="color:var(--primary)"></i>
+        </div>
+        <h3 class="mt-5 text-[20px] font-semibold leading-tight">Tactical Command Center</h3>
+        <p class="mt-2 text-[14px] text-[color:var(--fg-2)] leading-relaxed">
+          Real-time HUD. Online/offline state, uptime, last-scan latency. Deploy Scout Agents on demand.
+        </p>
+        <div class="mt-6 mono text-[10.5px] tracking-[.18em] uppercase text-[color:var(--fg-3)] flex items-center gap-2">
+          <span class="inline-block w-1.5 h-1.5 rounded-full" style="background:var(--success)"></span>
+          Live · 312d uptime
+        </div>
+      </article>
+
+      <article class="relative glass rounded p-6 lift">
+        <div class="flex items-center justify-between">
+          <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">/B</div>
+          <i data-lucide="shield-check" class="w-5 h-5" style="color:var(--primary)"></i>
+        </div>
+        <h3 class="mt-5 text-[20px] font-semibold leading-tight">Swipe to Purge</h3>
+        <p class="mt-2 text-[14px] text-[color:var(--fg-2)] leading-relaxed">
+          Tinder-fast triage for takedown candidates. Swipe right to authorize. Swipe left to ignore. Haptic on every action.
+        </p>
+        <div class="mt-6 flex items-center gap-2 mono text-[10.5px] tracking-[.18em] uppercase text-[color:var(--fg-3)]">
+          <i data-lucide="arrow-left" class="w-3 h-3"></i> Ignore &nbsp; · &nbsp; Purge <i data-lucide="arrow-right" class="w-3 h-3"></i>
+        </div>
+      </article>
+
+      <article class="relative glass rounded p-6 lift">
+        <div class="flex items-center justify-between">
+          <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">/C</div>
+          <i data-lucide="database" class="w-5 h-5" style="color:var(--primary)"></i>
+        </div>
+        <h3 class="mt-5 text-[20px] font-semibold leading-tight">Vector Registry</h3>
+        <p class="mt-2 text-[14px] text-[color:var(--fg-2)] leading-relaxed">
+          Searchable intel log of every detected domain. Status lifecycle: Active → Pending → Resolved. Risk score 0–100.
+        </p>
+        <div class="mt-6 mono text-[10.5px] tracking-[.18em] uppercase text-[color:var(--fg-3)]">
+          184,302 records · forensic-grade
+        </div>
+      </article>
+
+      <article class="relative glass rounded p-6 lift">
+        <div class="flex items-center justify-between">
+          <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">/D</div>
+          <i data-lucide="fingerprint" class="w-5 h-5" style="color:var(--primary)"></i>
+        </div>
+        <h3 class="mt-5 text-[20px] font-semibold leading-tight">Airlock &amp; Biometrics</h3>
+        <p class="mt-2 text-[14px] text-[color:var(--fg-2)] leading-relaxed">
+          FaceID/TouchID for sensitive operations. SecureStore credential vault. Mission-critical push alerts.
+        </p>
+        <div class="mt-6 mono text-[10.5px] tracking-[.18em] uppercase text-[color:var(--fg-3)]">
+          SOC 2 Type II · ISO 27001
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= COMMAND CENTER MOCK ========================= -->
+<section class="relative py-24" data-screen-label="command-center">
+  <div class="absolute inset-0 grid-bg opacity-[.35]"></div>
+  <div class="absolute inset-x-0 top-0 h-32 pointer-events-none" style="background:linear-gradient(180deg, var(--bg-0), transparent);"></div>
+  <div class="absolute inset-x-0 bottom-0 h-32 pointer-events-none" style="background:linear-gradient(0deg, var(--bg-0), transparent);"></div>
+
+  <div class="relative mx-auto max-w-[1320px] px-6">
+    <div class="flex items-end justify-between gap-10 flex-wrap">
+      <div class="max-w-2xl">
+        <div class="tag-row">
+          <span class="mono text-[11px] tracking-[.28em] uppercase">/02 · HUD</span>
+          <span class="ln"></span>
+        </div>
+        <h2 class="h-display mt-6 text-4xl sm:text-5xl lg:text-6xl">A read-out, not a report.</h2>
+        <p class="mt-5 text-[16.5px] text-[color:var(--fg-2)] max-w-xl">
+          Designed for OLED. Built for night vision. Every pixel earns its place — telemetry, threats, and the trigger to deploy more eyes on the network.
+        </p>
+      </div>
+    </div>
+
+    <!-- Mock dashboard -->
+    <div class="mt-12 relative glass-2 rounded-md overflow-hidden">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <!-- Top chrome -->
+      <div class="px-5 py-3 border-b flex items-center justify-between" style="border-color:var(--line)">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full" style="background:#E27D5E"></span>
+            <span class="w-2.5 h-2.5 rounded-full" style="background:#E8B66A"></span>
+            <span class="w-2.5 h-2.5 rounded-full" style="background:#9CB37A"></span>
+          </div>
+          <span class="mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">booksentinel.io · /command</span>
+        </div>
+        <div class="flex items-center gap-3 mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">
+          <span class="hidden sm:inline">Sector · NORTH-AMERICA</span>
+          <span class="hidden sm:inline">·</span>
+          <span>OPERATOR: O. KESTREL</span>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-12">
+        <!-- Side rail -->
+        <aside class="lg:col-span-2 border-r p-4 hidden lg:flex flex-col gap-1" style="border-color:var(--line)">
+          <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)] mb-2">Modules</div>
+          <a class="flex items-center gap-2 px-2.5 py-2 rounded mono text-[11.5px]" style="background:var(--primary-soft); color:var(--primary)"><i data-lucide="radar" class="w-3.5 h-3.5"></i> COMMAND</a>
+          <a class="flex items-center gap-2 px-2.5 py-2 rounded mono text-[11.5px] text-[color:var(--fg-2)] hover:bg-[color:rgba(64,38,22,0.06)]"><i data-lucide="shield" class="w-3.5 h-3.5"></i> TAKEDOWN</a>
+          <a class="flex items-center gap-2 px-2.5 py-2 rounded mono text-[11.5px] text-[color:var(--fg-2)] hover:bg-[color:rgba(64,38,22,0.06)]"><i data-lucide="database" class="w-3.5 h-3.5"></i> REGISTRY</a>
+          <a class="flex items-center gap-2 px-2.5 py-2 rounded mono text-[11.5px] text-[color:var(--fg-2)] hover:bg-[color:rgba(64,38,22,0.06)]"><i data-lucide="cpu" class="w-3.5 h-3.5"></i> SCOUTS</a>
+          <a class="flex items-center gap-2 px-2.5 py-2 rounded mono text-[11.5px] text-[color:var(--fg-2)] hover:bg-[color:rgba(64,38,22,0.06)]"><i data-lucide="globe-2" class="w-3.5 h-3.5"></i> SECTORS</a>
+          <a class="flex items-center gap-2 px-2.5 py-2 rounded mono text-[11.5px] text-[color:var(--fg-2)] hover:bg-[color:rgba(64,38,22,0.06)]"><i data-lucide="bell" class="w-3.5 h-3.5"></i> ALERTS</a>
+          <a class="flex items-center gap-2 px-2.5 py-2 rounded mono text-[11.5px] text-[color:var(--fg-2)] hover:bg-[color:rgba(64,38,22,0.06)]"><i data-lucide="cog" class="w-3.5 h-3.5"></i> SETTINGS</a>
+
+          <div class="mt-auto pt-4 border-t" style="border-color:var(--line)">
+            <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Operator</div>
+            <div class="mt-2 flex items-center gap-2.5">
+              <div class="w-7 h-7 rounded-full border flex items-center justify-center" style="border-color:var(--line-2); background:var(--bg-2)">
+                <i data-lucide="user" class="w-3.5 h-3.5"></i>
+              </div>
+              <div>
+                <div class="mono text-[11px] font-semibold leading-tight">O. KESTREL</div>
+                <div class="mono text-[10px] text-[color:var(--fg-3)] leading-tight">CLEARANCE · A4</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="lg:col-span-10 p-6">
+          <div class="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <div class="mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Mission Window · 24h</div>
+              <h3 class="mt-1 text-2xl font-semibold tracking-tight">Command Center</h3>
+            </div>
+            <button class="btn-primary mono text-[11px] tracking-[.22em] uppercase font-semibold px-4 py-2.5 rounded inline-flex items-center gap-2">
+              <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+              Deploy Scout Agent
+            </button>
+          </div>
+
+          <!-- 4 stat tiles -->
+          <div class="mt-5 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="rounded border p-4" style="border-color:var(--line)">
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Active Threats</div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-semibold" style="color:var(--destructive)">37</span>
+                <span class="mono text-[10px]" style="color:var(--destructive)">▲ 6</span>
+              </div>
+            </div>
+            <div class="rounded border p-4" style="border-color:var(--line)">
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Pending Verify</div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-semibold" style="color:var(--warning)">12</span>
+                <span class="mono text-[10px] text-[color:var(--fg-2)]">queue</span>
+              </div>
+            </div>
+            <div class="rounded border p-4" style="border-color:var(--line)">
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Purged Today</div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-semibold" style="color:var(--success)">204</span>
+                <span class="mono text-[10px]" style="color:var(--success)">▲ 12.4%</span>
+              </div>
+            </div>
+            <div class="rounded border p-4" style="border-color:var(--line)">
+              <div class="mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Scouts Deployed</div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span class="text-3xl font-semibold">14</span>
+                <span class="mono text-[10px] text-[color:var(--fg-2)]">agents</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid lg:grid-cols-3 gap-5">
+            <!-- Map / sectors -->
+            <div class="lg:col-span-2 rounded border p-5" style="border-color:var(--line); background:rgba(8,12,20,.4)">
+              <div class="flex items-center justify-between">
+                <div class="mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Global Heat Map</div>
+                <div class="flex items-center gap-3 mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">
+                  <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--destructive)"></span>HIGH</span>
+                  <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--warning)"></span>MED</span>
+                  <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full" style="background:var(--primary)"></span>LOW</span>
+                </div>
+              </div>
+              <!-- SVG abstract map -->
+              <svg viewBox="0 0 800 360" class="w-full h-auto mt-3" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                <defs>
+                  <pattern id="mapdot" width="14" height="14" patternUnits="userSpaceOnUse">
+                    <circle cx="1" cy="1" r="1" fill="rgba(64,38,22,.18)"/>
+                  </pattern>
+                </defs>
+                <rect width="800" height="360" fill="url(#mapdot)"/>
+                <!-- continents-ish silhouettes via clusters of dots -->
+                <g fill="rgba(64,38,22,.45)">
+                  <!-- N America -->
+                  <ellipse cx="180" cy="140" rx="120" ry="60" opacity=".25"/>
+                  <!-- S America -->
+                  <ellipse cx="250" cy="260" rx="50" ry="70" opacity=".25"/>
+                  <!-- Europe -->
+                  <ellipse cx="430" cy="120" rx="60" ry="40" opacity=".25"/>
+                  <!-- Africa -->
+                  <ellipse cx="460" cy="220" rx="60" ry="80" opacity=".25"/>
+                  <!-- Asia -->
+                  <ellipse cx="600" cy="150" rx="130" ry="60" opacity=".25"/>
+                  <!-- Oceania -->
+                  <ellipse cx="700" cy="280" rx="45" ry="25" opacity=".25"/>
+                </g>
+                <!-- Threat pings -->
+                <g>
+                  <circle cx="180" cy="140" r="4" fill="#A4361F"/>
+                  <circle cx="180" cy="140" r="4" fill="#A4361F" opacity=".4"><animate attributeName="r" from="4" to="20" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" from=".5" to="0" dur="2.4s" repeatCount="indefinite"/></circle>
+
+                  <circle cx="420" cy="125" r="3.5" fill="#C8841C"/>
+                  <circle cx="420" cy="125" r="3.5" fill="#C8841C" opacity=".4"><animate attributeName="r" from="3.5" to="18" dur="2.8s" begin=".3s" repeatCount="indefinite"/><animate attributeName="opacity" from=".5" to="0" dur="2.8s" begin=".3s" repeatCount="indefinite"/></circle>
+
+                  <circle cx="610" cy="160" r="4.5" fill="#A4361F"/>
+                  <circle cx="610" cy="160" r="4.5" fill="#A4361F" opacity=".4"><animate attributeName="r" from="4.5" to="22" dur="2.6s" begin=".6s" repeatCount="indefinite"/><animate attributeName="opacity" from=".5" to="0" dur="2.6s" begin=".6s" repeatCount="indefinite"/></circle>
+
+                  <circle cx="560" cy="240" r="3" fill="#C15F3C"/>
+                  <circle cx="560" cy="240" r="3" fill="#C15F3C" opacity=".4"><animate attributeName="r" from="3" to="16" dur="3s" begin=".2s" repeatCount="indefinite"/><animate attributeName="opacity" from=".5" to="0" dur="3s" begin=".2s" repeatCount="indefinite"/></circle>
+
+                  <circle cx="700" cy="285" r="3" fill="#C8841C"/>
+                  <circle cx="245" cy="270" r="3" fill="#C15F3C"/>
+                </g>
+              </svg>
+              <div class="mt-2 grid grid-cols-3 gap-3">
+                <div class="mono text-[11px] text-[color:var(--fg-2)]">EU · <span class="text-[color:var(--fg-1)]">14 active</span></div>
+                <div class="mono text-[11px] text-[color:var(--fg-2)]">APAC · <span class="text-[color:var(--fg-1)]">11 active</span></div>
+                <div class="mono text-[11px] text-[color:var(--fg-2)]">AMER · <span class="text-[color:var(--fg-1)]">12 active</span></div>
+              </div>
+            </div>
+
+            <!-- Live logs -->
+            <div class="rounded border" style="border-color:var(--line); background:rgba(8,12,20,.4)">
+              <div class="px-4 py-3 border-b flex items-center justify-between" style="border-color:var(--line)">
+                <div class="mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Forensic Log</div>
+                <div class="mono text-[10px] tracking-[.22em] uppercase" style="color:var(--success)">REC</div>
+              </div>
+              <div id="logsBig" class="p-3 mono text-[11px] leading-[1.7] text-[color:var(--fg-2)] h-[260px] overflow-hidden"></div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= SWIPE TO PURGE ========================= -->
+<section id="takedown" class="relative py-28 overflow-hidden" data-screen-label="swipe-to-purge">
+  <div class="absolute -left-40 top-20 w-[520px] h-[520px] rounded-full" style="background:radial-gradient(circle, rgba(164,54,31,.10), transparent 60%)"></div>
+  <div class="absolute -right-40 bottom-0 w-[520px] h-[520px] rounded-full" style="background:radial-gradient(circle, rgba(107,127,74,.08), transparent 60%)"></div>
+
+  <div class="relative mx-auto max-w-[1320px] px-6 grid lg:grid-cols-12 gap-12 items-center">
+    <div class="lg:col-span-5">
+      <div class="tag-row">
+        <span class="mono text-[11px] tracking-[.28em] uppercase">/03 · Takedowns</span>
+        <span class="ln"></span>
+      </div>
+      <h2 class="h-display mt-6 text-4xl sm:text-5xl lg:text-6xl">
+        Triage at the speed of <span style="color:var(--primary)">muscle memory</span>.
+      </h2>
+      <p class="mt-5 text-[16.5px] text-[color:var(--fg-2)] max-w-md">
+        Every candidate is one decisive gesture away from neutralization. Swipe right to purge — biometric prompt confirms intent and signs the takedown request. Swipe left to mark false positive.
+      </p>
+
+      <ul class="mt-8 space-y-3.5">
+        <li class="flex items-start gap-3">
+          <i data-lucide="hand" class="w-4 h-4 mt-1" style="color:var(--primary)"></i>
+          <div><span class="font-semibold">Haptic feedback</span><span class="text-[color:var(--fg-2)]"> on every commit — operators feel the action register.</span></div>
+        </li>
+        <li class="flex items-start gap-3">
+          <i data-lucide="undo-2" class="w-4 h-4 mt-1" style="color:var(--primary)"></i>
+          <div><span class="font-semibold">Optimistic UI</span><span class="text-[color:var(--fg-2)]"> with rollback — if Supabase rejects, the card snaps back.</span></div>
+        </li>
+        <li class="flex items-start gap-3">
+          <i data-lucide="lock" class="w-4 h-4 mt-1" style="color:var(--primary)"></i>
+          <div><span class="font-semibold">Biometric gate</span><span class="text-[color:var(--fg-2)]"> on each batch — FaceID, TouchID, or hardware key.</span></div>
+        </li>
+      </ul>
+
+      <div class="mt-9 flex flex-wrap items-center gap-4">
+        <button id="resetStack" class="btn-ghost mono text-[11px] tracking-[.22em] uppercase px-4 py-2.5 rounded inline-flex items-center gap-2">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          Reset Demo
+        </button>
+        <div class="mono text-[10.5px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Tap the buttons — or drag the card</div>
+      </div>
+    </div>
+
+    <!-- Card stack demo -->
+    <div class="lg:col-span-7 flex justify-center">
+      <div class="relative w-full max-w-md">
+        <div class="relative aspect-[3/4] w-full">
+          <!-- Stack -->
+          <div id="cardStack" class="absolute inset-0">
+            <!-- cards injected via JS -->
+          </div>
+          <!-- Action buttons -->
+          <div class="absolute -bottom-20 left-0 right-0 flex items-center justify-center gap-6">
+            <button id="btnIgnore" class="w-14 h-14 rounded-full border flex items-center justify-center hover:scale-105 transition" style="border-color:rgba(164,54,31,.4); background:rgba(164,54,31,.08); color:var(--destructive)" aria-label="Ignore">
+              <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+            <div class="flex flex-col items-center gap-1">
+              <span class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Verify</span>
+              <button class="w-12 h-12 rounded-full flex items-center justify-center" style="background:var(--bg-2); border:1px solid var(--line-2)">
+                <i data-lucide="scan-face" class="w-5 h-5" style="color:var(--primary)"></i>
+              </button>
+            </div>
+            <button id="btnPurge" class="w-14 h-14 rounded-full border flex items-center justify-center hover:scale-105 transition" style="border-color:rgba(107,127,74,.4); background:rgba(107,127,74,.08); color:var(--success)" aria-label="Purge">
+              <i data-lucide="check" class="w-6 h-6"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= REGISTRY ========================= -->
+<section id="registry" class="relative py-28" data-screen-label="registry">
+  <div class="mx-auto max-w-[1320px] px-6">
+    <div class="grid lg:grid-cols-12 gap-12">
+      <div class="lg:col-span-4">
+        <div class="tag-row">
+          <span class="mono text-[11px] tracking-[.28em] uppercase">/04 · Registry</span>
+          <span class="ln"></span>
+        </div>
+        <h2 class="h-display mt-6 text-4xl sm:text-5xl">
+          Forensic memory.<br/>Every vector, every state.
+        </h2>
+        <p class="mt-5 text-[16.5px] text-[color:var(--fg-2)] max-w-md">
+          Every domain that has ever touched your IP — what it hosted, who hosts it, which mirror it spawned, when it died. Searchable, auditable, exportable to your legal stack.
+        </p>
+        <div class="mt-8 grid grid-cols-3 gap-3 max-w-sm">
+          <div class="rounded border p-3" style="border-color:var(--line)">
+            <div class="mono text-[9.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Active</div>
+            <div class="mt-1 mono text-lg font-semibold" style="color:var(--destructive)">1,284</div>
+          </div>
+          <div class="rounded border p-3" style="border-color:var(--line)">
+            <div class="mono text-[9.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Pending</div>
+            <div class="mt-1 mono text-lg font-semibold" style="color:var(--warning)">428</div>
+          </div>
+          <div class="rounded border p-3" style="border-color:var(--line)">
+            <div class="mono text-[9.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Resolved</div>
+            <div class="mt-1 mono text-lg font-semibold" style="color:var(--success)">182,590</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8">
+        <div class="glass-2 rounded-md relative overflow-hidden">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <!-- search bar -->
+          <div class="px-5 py-3 border-b flex items-center gap-3" style="border-color:var(--line)">
+            <i data-lucide="search" class="w-4 h-4" style="color:var(--fg-3)"></i>
+            <input id="registrySearch" class="bg-transparent outline-none flex-1 mono text-[12.5px] tracking-[.04em] placeholder:text-[color:var(--fg-3)]" placeholder="SEARCH REGISTRY  ·  domain, tag, sector, status…"/>
+            <div class="flex items-center gap-2">
+              <button data-filter="all"   class="rfilter active mono text-[10px] tracking-[.22em] uppercase px-2.5 py-1.5 rounded border" style="border-color:var(--line-2)">ALL</button>
+              <button data-filter="active" class="rfilter mono text-[10px] tracking-[.22em] uppercase px-2.5 py-1.5 rounded border" style="border-color:var(--line-2); color:var(--destructive)">ACTIVE</button>
+              <button data-filter="pending" class="rfilter mono text-[10px] tracking-[.22em] uppercase px-2.5 py-1.5 rounded border" style="border-color:var(--line-2); color:var(--warning)">PENDING</button>
+              <button data-filter="resolved" class="rfilter mono text-[10px] tracking-[.22em] uppercase px-2.5 py-1.5 rounded border" style="border-color:var(--line-2); color:var(--success)">RESOLVED</button>
+            </div>
+          </div>
+          <!-- table -->
+          <div class="grid grid-cols-12 px-5 py-2.5 mono text-[10px] tracking-[.22em] uppercase text-[color:var(--fg-3)] border-b" style="border-color:var(--line)">
+            <div class="col-span-5">Vector</div>
+            <div class="col-span-2">Risk</div>
+            <div class="col-span-2">Tags</div>
+            <div class="col-span-2">Status</div>
+            <div class="col-span-1 text-right">·</div>
+          </div>
+          <div id="registryRows"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= SECURITY ========================= -->
+<section id="security" class="relative py-28">
+  <div class="absolute inset-0 grid-bg opacity-30"></div>
+  <div class="relative mx-auto max-w-[1320px] px-6">
+    <div class="tag-row">
+      <span class="mono text-[11px] tracking-[.28em] uppercase">/05 · Security &amp; Forensics</span>
+      <span class="ln"></span>
+    </div>
+    <div class="mt-6 grid lg:grid-cols-12 gap-10 items-center">
+      <div class="lg:col-span-6">
+        <h2 class="h-display text-4xl sm:text-5xl lg:text-6xl">An airlock between<br/>signal and action.</h2>
+        <p class="mt-5 text-[16.5px] text-[color:var(--fg-2)] max-w-xl">
+          BookSentinel is paranoid by design. Every credential lives in hardware-backed SecureStore. Every takedown request is signed. Every operator authenticates with biometrics on entry.
+        </p>
+        <div class="mt-10 grid sm:grid-cols-2 gap-3">
+          <div class="rounded border p-4" style="border-color:var(--line)">
+            <i data-lucide="shield-check" class="w-5 h-5" style="color:var(--primary)"></i>
+            <div class="mt-3 font-semibold">SOC 2 Type II</div>
+            <div class="mt-1 mono text-[11.5px] text-[color:var(--fg-2)]">Independently audited annually.</div>
+          </div>
+          <div class="rounded border p-4" style="border-color:var(--line)">
+            <i data-lucide="lock-keyhole" class="w-5 h-5" style="color:var(--primary)"></i>
+            <div class="mt-3 font-semibold">E2E Signed Requests</div>
+            <div class="mt-1 mono text-[11.5px] text-[color:var(--fg-2)]">Every takedown carries operator signature.</div>
+          </div>
+          <div class="rounded border p-4" style="border-color:var(--line)">
+            <i data-lucide="server" class="w-5 h-5" style="color:var(--primary)"></i>
+            <div class="mt-3 font-semibold">Regional Residency</div>
+            <div class="mt-1 mono text-[11.5px] text-[color:var(--fg-2)]">EU, US, APAC data planes available.</div>
+          </div>
+          <div class="rounded border p-4" style="border-color:var(--line)">
+            <i data-lucide="file-search" class="w-5 h-5" style="color:var(--primary)"></i>
+            <div class="mt-3 font-semibold">Forensic Audit Log</div>
+            <div class="mt-1 mono text-[11.5px] text-[color:var(--fg-2)]">Tamper-evident, 7-year retention.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Biometric prompt mock -->
+      <div class="lg:col-span-6 flex justify-center">
+        <div class="relative w-full max-w-md glass-2 rounded-md p-8 overflow-hidden">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="absolute inset-0 grid-bg-fine opacity-50"></div>
+          <div class="relative">
+            <div class="mono text-[10.5px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">/airlock/verify</div>
+            <div class="mt-2 text-xl font-semibold tracking-tight">Authorize Takedown · T-2031</div>
+            <div class="mt-1 mono text-[12px] text-[color:var(--fg-2)]">freebooks-vault[.]ru/atlas-of-fog</div>
+            <!-- Face scan -->
+            <div class="mx-auto mt-9 relative w-48 h-48">
+              <svg viewBox="0 0 200 200" class="w-full h-full">
+                <defs>
+                  <linearGradient id="scanG" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#C15F3C" stop-opacity="0"/>
+                    <stop offset="50%" stop-color="#C15F3C" stop-opacity=".6"/>
+                    <stop offset="100%" stop-color="#C15F3C" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <!-- frame brackets -->
+                <g stroke="#C15F3C" stroke-width="2" fill="none">
+                  <path d="M20 60 V20 H60"/>
+                  <path d="M140 20 H180 V60"/>
+                  <path d="M180 140 V180 H140"/>
+                  <path d="M60 180 H20 V140"/>
+                </g>
+                <!-- face outline -->
+                <g stroke="#8B7355" stroke-width="1.4" fill="none" opacity=".8">
+                  <ellipse cx="100" cy="100" rx="48" ry="60"/>
+                  <circle cx="84" cy="92" r="3" fill="#8B7355"/>
+                  <circle cx="116" cy="92" r="3" fill="#8B7355"/>
+                  <path d="M84 122 q16 10 32 0"/>
+                  <path d="M100 96 v18"/>
+                </g>
+                <!-- scanning bar -->
+                <rect x="20" y="50" width="160" height="14" fill="url(#scanG)">
+                  <animate attributeName="y" values="40;150;40" dur="2.4s" repeatCount="indefinite"/>
+                </rect>
+              </svg>
+            </div>
+            <div class="mt-7 flex items-center justify-between mono text-[11px] tracking-[.22em] uppercase">
+              <span class="text-[color:var(--fg-3)]">Verifying biometric</span>
+              <span style="color:var(--primary)" class="flex items-center gap-1.5">
+                <span class="inline-block w-1.5 h-1.5 rounded-full pulse-dot" style="background:var(--primary); color:var(--primary)"></span>
+                Authenticating…
+              </span>
+            </div>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <button class="btn-ghost py-2.5 rounded mono text-[11px] tracking-[.22em] uppercase">Cancel</button>
+              <button class="btn-primary py-2.5 rounded mono text-[11px] tracking-[.22em] uppercase font-semibold">Authorize</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= HOW IT WORKS ========================= -->
+<section class="relative py-28">
+  <div class="mx-auto max-w-[1320px] px-6">
+    <div class="tag-row">
+      <span class="mono text-[11px] tracking-[.28em] uppercase">/06 · Data Flow</span>
+      <span class="ln"></span>
+    </div>
+    <h2 class="mt-6 h-display text-4xl sm:text-5xl lg:text-6xl max-w-3xl">Detection. Decision. Disappearance.</h2>
+
+    <div class="mt-14 grid md:grid-cols-4 gap-4">
+      <div class="relative glass rounded p-6 lift">
+        <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Step 01</div>
+        <h3 class="mt-3 text-xl font-semibold">Detect</h3>
+        <p class="mt-2 text-[14px] text-[color:var(--fg-2)] leading-relaxed">Scout Agents fan out across the open and dark web, indexing candidates and inserting them into the registry.</p>
+        <div class="mt-5 mono text-[11px] text-[color:var(--fg-3)] flex items-center gap-2">
+          <i data-lucide="radar" class="w-3.5 h-3.5"></i> Scout Agents · 24/7
+        </div>
+      </div>
+      <div class="relative glass rounded p-6 lift">
+        <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Step 02</div>
+        <h3 class="mt-3 text-xl font-semibold">Sync</h3>
+        <p class="mt-2 text-[14px] text-[color:var(--fg-2)] leading-relaxed">Supabase Realtime streams threat events into the operator's mobile device the moment they're indexed.</p>
+        <div class="mt-5 mono text-[11px] text-[color:var(--fg-3)] flex items-center gap-2">
+          <i data-lucide="cable" class="w-3.5 h-3.5"></i> &lt; 200ms p95
+        </div>
+      </div>
+      <div class="relative glass rounded p-6 lift">
+        <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Step 03</div>
+        <h3 class="mt-3 text-xl font-semibold">Decide</h3>
+        <p class="mt-2 text-[14px] text-[color:var(--fg-2)] leading-relaxed">Operator swipes through candidates with biometric authorization; haptic feedback confirms intent.</p>
+        <div class="mt-5 mono text-[11px] text-[color:var(--fg-3)] flex items-center gap-2">
+          <i data-lucide="fingerprint" class="w-3.5 h-3.5"></i> FaceID / TouchID
+        </div>
+      </div>
+      <div class="relative glass rounded p-6 lift">
+        <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Step 04</div>
+        <h3 class="mt-3 text-xl font-semibold">Disappear</h3>
+        <p class="mt-2 text-[14px] text-[color:var(--fg-2)] leading-relaxed">Signed takedown is dispatched to host, registrar, and CDN. Median MTTR: 42 minutes.</p>
+        <div class="mt-5 mono text-[11px] text-[color:var(--fg-3)] flex items-center gap-2">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Resolved · forever
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= TESTIMONIAL ========================= -->
+<section class="relative py-24">
+  <div class="mx-auto max-w-[1100px] px-6">
+    <div class="relative glass-2 rounded-md p-12 overflow-hidden">
+      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+      <div class="absolute -top-20 -right-20 w-[300px] h-[300px] rounded-full" style="background:radial-gradient(circle, rgba(193,95,60,.20), transparent 60%)"></div>
+      <i data-lucide="quote" class="w-6 h-6" style="color:var(--primary)"></i>
+      <blockquote class="mt-6 text-2xl sm:text-3xl lg:text-[34px] leading-snug font-medium tracking-tight max-w-3xl">
+        We used to spend Mondays writing DMCA emails. With BookSentinel my team purges 200+ vectors before lunch — and we can <em class="not-italic" style="color:var(--primary)">prove every one</em> in court.
+      </blockquote>
+      <div class="mt-9 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full border flex items-center justify-center mono font-bold" style="border-color:var(--line-2); background:var(--bg-2)">EM</div>
+        <div>
+          <div class="font-semibold">E. Marwick</div>
+          <div class="mono text-[11px] tracking-[.18em] uppercase text-[color:var(--fg-3)]">Head of IP Defense · Vanguard Press</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= PRICING ========================= -->
+<section id="pricing" class="relative py-28">
+  <div class="mx-auto max-w-[1320px] px-6">
+    <div class="text-center">
+      <div class="inline-flex">
+        <div class="tag-row" style="gap:14px">
+          <span class="ln" style="width:60px"></span>
+          <span class="mono text-[11px] tracking-[.28em] uppercase">/07 · Clearance Tiers</span>
+          <span class="ln" style="width:60px"></span>
+        </div>
+      </div>
+      <h2 class="h-display mt-6 text-4xl sm:text-5xl lg:text-6xl">Pick your clearance level.</h2>
+      <p class="mt-5 text-[16.5px] text-[color:var(--fg-2)] max-w-2xl mx-auto">Every tier ships with the full Tactical Command Center. We meter on Scouts, takedowns, and operators — not features.</p>
+    </div>
+
+    <div class="mt-14 grid md:grid-cols-3 gap-5">
+      <!-- INDIE -->
+      <div class="relative glass rounded p-7 lift">
+        <div class="flex items-center justify-between">
+          <div class="mono text-[10.5px] tracking-[.28em] uppercase text-[color:var(--fg-2)]">Indie</div>
+          <i data-lucide="user" class="w-4 h-4" style="color:var(--fg-3)"></i>
+        </div>
+        <div class="mt-5 flex items-baseline gap-1.5">
+          <span class="text-5xl font-semibold tracking-tight">$49</span>
+          <span class="mono text-[11px] tracking-[.18em] uppercase text-[color:var(--fg-3)]">/mo</span>
+        </div>
+        <p class="mt-3 text-[14px] text-[color:var(--fg-2)]">For solo authors and small imprints defending their backlist.</p>
+        <a href="#cta" class="mt-6 inline-flex w-full justify-center btn-ghost mono text-[11px] tracking-[.22em] uppercase px-4 py-3 rounded">Begin Mission</a>
+        <ul class="mt-7 space-y-3 mono text-[12px] text-[color:var(--fg-2)]">
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> Up to 5 titles</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> 2 Scout Agents</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> 500 takedowns / mo</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> Mobile app · 1 operator</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> 30-day registry</li>
+        </ul>
+      </div>
+
+      <!-- RIGHTS MANAGER (featured) -->
+      <div class="relative rounded p-7 lift" style="background:linear-gradient(180deg, rgba(193,95,60,.13), rgba(193,95,60,.02)); border:1px solid rgba(193,95,60,.45)">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2 mono text-[10px] tracking-[.28em] uppercase font-bold px-3 py-1 rounded" style="background:var(--primary); color:#FFF8EC">Most Deployed</div>
+        <div class="flex items-center justify-between">
+          <div class="mono text-[10.5px] tracking-[.28em] uppercase" style="color:var(--primary)">Rights Manager</div>
+          <i data-lucide="shield" class="w-4 h-4" style="color:var(--primary)"></i>
+        </div>
+        <div class="mt-5 flex items-baseline gap-1.5">
+          <span class="text-5xl font-semibold tracking-tight">$399</span>
+          <span class="mono text-[11px] tracking-[.18em] uppercase text-[color:var(--fg-3)]">/mo</span>
+        </div>
+        <p class="mt-3 text-[14px] text-[color:var(--fg-2)]">For publishing houses, agencies, and rights teams running active enforcement.</p>
+        <a href="#cta" class="mt-6 inline-flex w-full justify-center btn-primary mono text-[11px] tracking-[.22em] uppercase font-semibold px-4 py-3 rounded">Request Clearance</a>
+        <ul class="mt-7 space-y-3 mono text-[12px] text-[color:var(--fg-2)]">
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> Unlimited titles</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> 12 Scout Agents</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> 10,000 takedowns / mo</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> 10 operators · roles</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> 7-year forensic log</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> Gemini threat analysis</li>
+        </ul>
+      </div>
+
+      <!-- ENTERPRISE -->
+      <div class="relative glass rounded p-7 lift">
+        <div class="flex items-center justify-between">
+          <div class="mono text-[10.5px] tracking-[.28em] uppercase text-[color:var(--fg-2)]">Sovereign</div>
+          <i data-lucide="globe-2" class="w-4 h-4" style="color:var(--fg-3)"></i>
+        </div>
+        <div class="mt-5 flex items-baseline gap-1.5">
+          <span class="text-5xl font-semibold tracking-tight">Talk</span>
+        </div>
+        <p class="mt-3 text-[14px] text-[color:var(--fg-2)]">For the Big Five, studios, and IP-licensing conglomerates. Dedicated infrastructure.</p>
+        <a href="#cta" class="mt-6 inline-flex w-full justify-center btn-ghost mono text-[11px] tracking-[.22em] uppercase px-4 py-3 rounded">Contact Operations</a>
+        <ul class="mt-7 space-y-3 mono text-[12px] text-[color:var(--fg-2)]">
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> Everything in Rights Manager</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> Dedicated Scout fleet</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> Regional data residency</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> SSO &amp; SCIM</li>
+          <li class="flex items-center gap-2"><i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--success)"></i> Named tactical liaison</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= FAQ ========================= -->
+<section class="relative py-28">
+  <div class="mx-auto max-w-[1100px] px-6">
+    <div class="tag-row">
+      <span class="mono text-[11px] tracking-[.28em] uppercase">/08 · Intel · FAQ</span>
+      <span class="ln"></span>
+    </div>
+    <h2 class="mt-6 h-display text-4xl sm:text-5xl">Common transmissions.</h2>
+    <div class="mt-12 grid sm:grid-cols-2 gap-x-12 gap-y-10">
+      <div>
+        <h3 class="font-semibold text-lg">How fast is a takedown actually executed?</h3>
+        <p class="mt-2 text-[14.5px] leading-relaxed text-[color:var(--fg-2)]">Median MTTR is 42 minutes from operator swipe to host acknowledgment. Hosts with DMCA SLAs respond within 14 minutes on average.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-lg">What jurisdictions do you operate in?</h3>
+        <p class="mt-2 text-[14.5px] leading-relaxed text-[color:var(--fg-2)]">We route through DMCA (US), Article 17 (EU), Section 79 (IN), and 14 other regional frameworks. Sovereign tier supports custom counsel.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-lg">Is the registry court-admissible?</h3>
+        <p class="mt-2 text-[14.5px] leading-relaxed text-[color:var(--fg-2)]">Yes. Every event is signed, timestamped by RFC 3161 TSAs, and exportable as an evidentiary bundle.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-lg">Who is BookSentinel built for?</h3>
+        <p class="mt-2 text-[14.5px] leading-relaxed text-[color:var(--fg-2)]">Traditional book publishers, literary imprints, and rights agencies. We focus on print and ebook piracy of trade titles — not audiobooks, screenplays, music, or video.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-lg">What does Gemini do in the loop?</h3>
+        <p class="mt-2 text-[14.5px] leading-relaxed text-[color:var(--fg-2)]">Triage. Gemini classifies candidates, fingerprints content, and pre-scores risk — so your operators only see signal.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-lg">Can I trial without a credit card?</h3>
+        <p class="mt-2 text-[14.5px] leading-relaxed text-[color:var(--fg-2)]">Yes. 14-day clearance on the Rights Manager tier. We'll provision a sandbox sector with synthetic threats.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= CTA ========================= -->
+<section id="cta" class="relative py-28">
+  <div class="mx-auto max-w-[1320px] px-6">
+    <div class="relative rounded-md overflow-hidden p-12 sm:p-16" style="background: linear-gradient(135deg, rgba(193,95,60,.18), rgba(193,95,60,.02) 60%, rgba(107,127,74,.06)); border:1px solid rgba(193,95,60,.35);">
+      <div class="absolute inset-0 grid-bg-fine opacity-50"></div>
+      <div class="relative grid lg:grid-cols-12 items-center gap-10">
+        <div class="lg:col-span-7">
+          <div class="mono text-[11px] tracking-[.28em] uppercase text-[color:var(--fg-2)]">/ deploy</div>
+          <h2 class="h-display mt-4 text-4xl sm:text-5xl lg:text-[60px]">
+            Stand up your<br/> command center today.
+          </h2>
+          <p class="mt-5 text-[16.5px] text-[color:var(--fg-2)] max-w-xl">
+            Provision a sandbox sector in under 4 minutes. We'll seed it with synthetic threats so your team can drill before going live.
+          </p>
+        </div>
+        <div class="lg:col-span-5 flex flex-col gap-3">
+          <a href="#" class="btn-primary mono text-[12px] tracking-[.22em] uppercase font-semibold px-5 py-4 rounded inline-flex justify-center items-center gap-2">
+            Request Clearance <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+          </a>
+          <a href="#" class="btn-ghost mono text-[12px] tracking-[.22em] uppercase px-5 py-4 rounded inline-flex justify-center items-center gap-2">
+            Book a Tactical Demo
+          </a>
+          <div class="mt-2 mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)] text-center">No credit card · 14-day clearance · SOC 2 ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= FOOTER ========================= -->
+<footer class="relative border-t pt-16 pb-10" style="border-color:var(--line)">
+  <div class="mx-auto max-w-[1320px] px-6">
+    <div class="grid md:grid-cols-12 gap-10">
+      <div class="md:col-span-5">
+        <a href="#" class="flex items-center gap-2.5">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2 3 5v6c0 5 3.8 9.5 9 11 5.2-1.5 9-6 9-11V5l-9-3Z" stroke="#C15F3C" stroke-width="1.6"/>
+            <path d="M12 7v10M7 12h10" stroke="#C15F3C" stroke-width="1.6"/>
+          </svg>
+          <span class="mono text-[13px] tracking-[.22em] font-semibold">BOOK<span style="color:var(--primary)">SENTINEL</span></span>
+        </a>
+        <p class="mt-5 text-[14px] text-[color:var(--fg-2)] max-w-sm">Mobile-first surveillance and threat management for the rights teams who actually want to win.</p>
+        <div class="mt-6 mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)] flex items-center gap-2">
+          <span class="inline-block w-1.5 h-1.5 rounded-full pulse-dot" style="background:var(--success); color:var(--success)"></span>
+          All systems · operational · v4.12.2
+        </div>
+      </div>
+      <div class="md:col-span-2">
+        <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)] mb-3">Product</div>
+        <ul class="space-y-2 text-[14px] text-[color:var(--fg-2)]">
+          <li><a href="#platform" class="hover:text-[color:var(--fg-1)]">Platform</a></li>
+          <li><a href="#takedown" class="hover:text-[color:var(--fg-1)]">Takedowns</a></li>
+          <li><a href="#registry" class="hover:text-[color:var(--fg-1)]">Registry</a></li>
+          <li><a href="#security" class="hover:text-[color:var(--fg-1)]">Security</a></li>
+          <li><a href="#pricing" class="hover:text-[color:var(--fg-1)]">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="md:col-span-2">
+        <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)] mb-3">Company</div>
+        <ul class="space-y-2 text-[14px] text-[color:var(--fg-2)]">
+          <li><a href="#" class="hover:text-[color:var(--fg-1)]">Manifesto</a></li>
+          <li><a href="#" class="hover:text-[color:var(--fg-1)]">Operators</a></li>
+          <li><a href="#" class="hover:text-[color:var(--fg-1)]">Press</a></li>
+          <li><a href="#" class="hover:text-[color:var(--fg-1)]">Careers</a></li>
+        </ul>
+      </div>
+      <div class="md:col-span-3">
+        <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)] mb-3">Intel Brief</div>
+        <p class="text-[13.5px] text-[color:var(--fg-2)]">A monthly transmission on threat trends and rights enforcement.</p>
+        <form class="mt-3 flex" onsubmit="event.preventDefault(); this.querySelector('button').innerText='SUBSCRIBED';">
+          <input type="email" required placeholder="operator@imprint.com" class="bg-transparent flex-1 px-3 py-2.5 mono text-[12px] outline-none rounded-l border" style="border-color:var(--line-2)"/>
+          <button class="btn-primary mono text-[10.5px] tracking-[.22em] uppercase font-semibold px-3.5 rounded-r">Enlist</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="mt-14 pt-6 border-t flex flex-col md:flex-row items-center justify-between gap-3 mono text-[10.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]" style="border-color:var(--line)">
+      <div>© 2026 BookSentinel Ops · A division of Aegis Rights Group</div>
+      <div class="flex items-center gap-6">
+        <a href="#" class="hover:text-[color:var(--fg-1)]">Privacy</a>
+        <a href="#" class="hover:text-[color:var(--fg-1)]">Terms</a>
+        <a href="#" class="hover:text-[color:var(--fg-1)]">DPA</a>
+        <a href="#" class="hover:text-[color:var(--fg-1)]">Status</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ========================= SCRIPT ========================= -->
+<script>
+  // Icons
+  if (window.lucide) lucide.createIcons();
+
+  /* ====== UTC clock ====== */
+  function tick(){
+    const d = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const el = document.getElementById('hudTime');
+    if (el) el.textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* ====== Counters on view ====== */
+  function fmt(n){ return n.toLocaleString('en-US'); }
+  function animateCounter(el){
+    const target = parseInt(el.dataset.target, 10);
+    const dur = 1600;
+    const start = performance.now();
+    function step(t){
+      const p = Math.min(1, (t-start)/dur);
+      const eased = 1 - Math.pow(1-p, 3);
+      el.textContent = fmt(Math.round(target * eased));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ animateCounter(e.target); io.unobserve(e.target); }
+    });
+  }, {threshold: .4});
+  document.querySelectorAll('[data-counter]').forEach(el=> io.observe(el));
+
+  /* ====== Live logs ====== */
+  const LOG_LINES = [
+    {t:'INFO',  msg:'scout.deploy(agent=NEPTUNE) — sector EU-WEST'},
+    {t:'OK',    msg:'index +24 candidates · q=phish-bank.com'},
+    {t:'WARN',  msg:'tls fingerprint match · cluster #41 (risk 78)'},
+    {t:'INFO',  msg:'gemini.classify(T-2031) → pirate-pdf · conf 0.96'},
+    {t:'OK',    msg:'takedown.dispatch(T-2014) → host ack 9s'},
+    {t:'INFO',  msg:'realtime.publish · 1,284 listeners'},
+    {t:'CRIT',  msg:'high-risk vector detected · ddos-protected'},
+    {t:'OK',    msg:'registry.upsert · 184,302 records'},
+    {t:'INFO',  msg:'scout.sweep(.ru, .to, .info) — t=4.2s'},
+    {t:'OK',    msg:'biometric.verify(O.KESTREL) — granted'},
+    {t:'WARN',  msg:'mirror network growing on T-1998 (+3 nodes)'},
+    {t:'INFO',  msg:'session.refresh · operators=14 active'},
+    {t:'OK',    msg:'takedown.confirm(T-1937) — purged'},
+    {t:'INFO',  msg:'scout.idle(MERIDIAN) — awaiting orders'},
+  ];
+  const COLOR = { INFO:'var(--fg-2)', OK:'var(--success)', WARN:'var(--warning)', CRIT:'var(--destructive)' };
+  function streamLog(target, max){
+    let i = 0;
+    function add(){
+      const line = LOG_LINES[i % LOG_LINES.length]; i++;
+      const ts = new Date(); const pad=n=>String(n).padStart(2,'0');
+      const time = `${pad(ts.getHours())}:${pad(ts.getMinutes())}:${pad(ts.getSeconds())}`;
+      const div = document.createElement('div');
+      div.innerHTML = `<span style="color:var(--fg-4)">${time}</span> <span style="color:${COLOR[line.t]}; font-weight:600">${line.t.padEnd(4)}</span> <span>${line.msg}</span>`;
+      target.appendChild(div);
+      while (target.childElementCount > max) target.removeChild(target.firstChild);
+    }
+    for (let k=0;k<max;k++) add();
+    setInterval(add, 1400 + Math.random()*900);
+  }
+  const small = document.getElementById('liveLogs'); if (small) streamLog(small, 4);
+  const big = document.getElementById('logsBig');     if (big)   streamLog(big, 12);
+
+  /* ====== Swipe to Purge demo ====== */
+  const THREATS = [
+    {id:'T-2031', domain:'freebooks-vault[.]ru/atlas-of-fog',  risk:96, host:'OVHcloud · RU', mirrors:14, tag:'PIRATED PDF'},
+    {id:'T-2024', domain:'lit-mirror[.]to/shadow-archive',     risk:88, host:'BuyVM · LU',    mirrors:8,  tag:'TORRENT INDEX'},
+    {id:'T-2018', domain:'phish-readers[.]xyz/login',          risk:82, host:'Cloudflare',   mirrors:3,  tag:'PHISHING'},
+    {id:'T-2009', domain:'epub-stash[.]info/north-bound',      risk:74, host:'Hetzner · DE', mirrors:5,  tag:'ILLEGAL HOST'},
+    {id:'T-1998', domain:'darknet-shelf[.]onion/marwick',      risk:91, host:'TOR · hidden',  mirrors:21, tag:'DARK MIRROR'},
+    {id:'T-1971', domain:'shadow-press[.]cc/marwick-pdf', risk:68, host:'AWS · us-east-1', mirrors:2, tag:'BACKLIST LEAK'},
+  ];
+  function riskColor(r){ return r >= 85 ? 'var(--destructive)' : r >= 70 ? 'var(--warning)' : 'var(--primary)'; }
+
+  const stackEl = document.getElementById('cardStack');
+  let active = 0;
+  function renderStack(){
+    stackEl.innerHTML = '';
+    for (let i = active; i < Math.min(active+3, THREATS.length); i++){
+      const t = THREATS[i];
+      const offset = i - active;
+      const card = document.createElement('div');
+      card.className = 'swipe-card absolute inset-0';
+      card.style.transform = `translateY(${offset*10}px) scale(${1 - offset*0.04})`;
+      card.style.zIndex = 100 - offset;
+      card.style.opacity = `${1 - offset*0.22}`;
+      card.dataset.idx = i;
+      card.innerHTML = `
+        <div class="glass-2 rounded-lg h-full p-6 relative overflow-hidden">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <div class="absolute inset-0 grid-bg-fine opacity-40"></div>
+          <div class="relative flex flex-col h-full">
+            <div class="flex items-center justify-between">
+              <div class="mono text-[10.5px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">${t.id} · ${t.tag}</div>
+              <div class="flex items-center gap-2">
+                <i data-lucide="alert-triangle" class="w-3.5 h-3.5" style="color:${riskColor(t.risk)}"></i>
+                <span class="mono text-[11px] tracking-[.18em] uppercase" style="color:${riskColor(t.risk)}">RISK ${t.risk}</span>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Target Vector</div>
+              <div class="mt-1 mono text-lg font-semibold break-all">${t.domain}</div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-4">
+              <div>
+                <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Host</div>
+                <div class="mono text-[12.5px] font-medium mt-1">${t.host}</div>
+              </div>
+              <div>
+                <div class="mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">Mirrors</div>
+                <div class="mono text-[12.5px] font-medium mt-1">${t.mirrors} detected</div>
+              </div>
+            </div>
+
+            <!-- Risk meter -->
+            <div class="mt-6">
+              <div class="flex items-center justify-between mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">
+                <span>Confidence</span><span>${t.risk}/100</span>
+              </div>
+              <div class="mt-2 h-1 rounded-full overflow-hidden" style="background:rgba(64,38,22,.15)">
+                <div style="width:${t.risk}%; height:100%; background:${riskColor(t.risk)}"></div>
+              </div>
+            </div>
+
+            <!-- Tag chips -->
+            <div class="mt-5 flex flex-wrap gap-2">
+              <span class="mono text-[10px] tracking-[.18em] uppercase px-2 py-1 rounded border" style="border-color:var(--line-2); color:var(--fg-2)">${t.tag}</span>
+              <span class="mono text-[10px] tracking-[.18em] uppercase px-2 py-1 rounded border" style="border-color:var(--line-2); color:var(--fg-2)">EU/EN</span>
+              <span class="mono text-[10px] tracking-[.18em] uppercase px-2 py-1 rounded border" style="border-color:var(--line-2); color:var(--fg-2)">FIRST SEEN 2h</span>
+            </div>
+
+            <div class="mt-auto pt-6 grid grid-cols-2 gap-3 mono text-[10px] tracking-[.28em] uppercase text-[color:var(--fg-3)]">
+              <div class="flex items-center gap-2"><i data-lucide="arrow-left" class="w-3 h-3"></i> IGNORE</div>
+              <div class="flex items-center justify-end gap-2">PURGE <i data-lucide="arrow-right" class="w-3 h-3"></i></div>
+            </div>
+          </div>
+
+          <!-- Decision badges -->
+          <div data-stamp="purge" class="absolute top-6 right-6 rotate-[12deg] mono text-[14px] font-bold px-3 py-1.5 border-2 rounded opacity-0 transition" style="color:var(--success); border-color:var(--success)">PURGE</div>
+          <div data-stamp="ignore" class="absolute top-6 left-6 -rotate-[12deg] mono text-[14px] font-bold px-3 py-1.5 border-2 rounded opacity-0 transition" style="color:var(--destructive); border-color:var(--destructive)">IGNORE</div>
+        </div>
+      `;
+      stackEl.appendChild(card);
+    }
+    if (active >= THREATS.length){
+      const done = document.createElement('div');
+      done.className = 'absolute inset-0 flex items-center justify-center';
+      done.innerHTML = `
+        <div class="glass-2 rounded-lg p-10 text-center">
+          <div class="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4" style="background:rgba(107,127,74,.10); color:var(--success)">
+            <i data-lucide="check-circle-2" class="w-7 h-7"></i>
+          </div>
+          <div class="text-2xl font-semibold tracking-tight">All clear</div>
+          <div class="mt-2 mono text-[11.5px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">Sector triaged · 0 active</div>
+        </div>`;
+      stackEl.appendChild(done);
+    }
+    if (window.lucide) lucide.createIcons();
+    bindTopCard();
+  }
+  function bindTopCard(){
+    const top = stackEl.querySelector('.swipe-card:not(.gone-left):not(.gone-right)');
+    if (!top) return;
+    let startX=null, dx=0;
+    const inner = top.firstElementChild;
+    const stampP = top.querySelector('[data-stamp="purge"]');
+    const stampI = top.querySelector('[data-stamp="ignore"]');
+    function onMove(x){
+      dx = x - startX;
+      inner.style.transform = `translateX(${dx}px) rotate(${dx/20}deg)`;
+      const pct = Math.min(1, Math.abs(dx)/120);
+      if (dx > 0){ stampP.style.opacity = pct; stampI.style.opacity = 0; }
+      else { stampI.style.opacity = pct; stampP.style.opacity = 0; }
+    }
+    function commit(direction){
+      top.classList.add(direction > 0 ? 'gone-right' : 'gone-left');
+      setTimeout(()=>{ active++; renderStack(); }, 280);
+    }
+    function release(){
+      if (Math.abs(dx) > 110) commit(dx);
+      else { inner.style.transform=''; stampP.style.opacity=0; stampI.style.opacity=0; }
+      startX = null; dx = 0;
+    }
+    top.onpointerdown = (e)=>{ startX = e.clientX; top.setPointerCapture(e.pointerId); };
+    top.onpointermove = (e)=>{ if (startX!==null) onMove(e.clientX); };
+    top.onpointerup = top.onpointercancel = release;
+    top.dataset.bound = '1';
+  }
+  function swipe(direction){
+    const top = stackEl.querySelector('.swipe-card:not(.gone-left):not(.gone-right)');
+    if (!top) return;
+    top.classList.add(direction>0 ? 'gone-right' : 'gone-left');
+    setTimeout(()=>{ active++; renderStack(); }, 280);
+  }
+  document.getElementById('btnPurge')?.addEventListener('click', ()=> swipe(1));
+  document.getElementById('btnIgnore')?.addEventListener('click', ()=> swipe(-1));
+  document.getElementById('resetStack')?.addEventListener('click', ()=>{ active = 0; renderStack(); });
+  renderStack();
+
+  /* ====== Registry rows ====== */
+  const REG = [
+    {dom:'freebooks-vault[.]ru/atlas-of-fog',     risk:96, tags:['PIRATED PDF','RU'], status:'active'},
+    {dom:'lit-mirror[.]to/shadow-archive',         risk:88, tags:['TORRENT','LU'],     status:'active'},
+    {dom:'phish-readers[.]xyz/login',              risk:82, tags:['PHISHING','CN'],    status:'pending'},
+    {dom:'epub-stash[.]info/north-bound',          risk:74, tags:['ILLEGAL HOST','DE'],status:'pending'},
+    {dom:'darknet-shelf[.]onion/marwick',          risk:91, tags:['TOR'],              status:'active'},
+    {dom:'shadow-press[.]cc/marwick-pdf', risk:68, tags:['BACKLIST LEAK'], status:'pending'},
+    {dom:'oldlib-archive[.]net/queen-of-vines',    risk:23, tags:['ARCHIVE','US'],     status:'resolved'},
+    {dom:'mirror-quill[.]su/marwick-collected',    risk:81, tags:['MIRROR','SU'],      status:'resolved'},
+    {dom:'pdf-fountain[.]work/forge',              risk:55, tags:['PIRATED PDF'],      status:'resolved'},
+  ];
+  const statusCfg = {
+    active:   {color:'var(--destructive)', label:'ACTIVE',   line:'threat-line-l'},
+    pending:  {color:'var(--warning)',     label:'PENDING',  line:'threat-line-w'},
+    resolved: {color:'var(--success)',     label:'RESOLVED', line:'threat-line-s'},
+  };
+  function renderRegistry(){
+    const q = (document.getElementById('registrySearch').value || '').toLowerCase();
+    const filter = document.querySelector('.rfilter.active')?.dataset.filter || 'all';
+    const target = document.getElementById('registryRows');
+    target.innerHTML = '';
+    REG
+      .filter(r => filter==='all' || r.status===filter)
+      .filter(r => !q || r.dom.toLowerCase().includes(q) || r.tags.join(' ').toLowerCase().includes(q))
+      .forEach(r => {
+        const c = statusCfg[r.status];
+        const rc = r.risk >= 85 ? 'var(--destructive)' : r.risk >= 70 ? 'var(--warning)' : r.risk >= 40 ? 'var(--primary)' : 'var(--success)';
+        const row = document.createElement('div');
+        row.className = `grid grid-cols-12 px-5 py-3.5 border-b items-center ${c.line}`;
+        row.style.borderColor = 'var(--line)';
+        row.innerHTML = `
+          <div class="col-span-5 mono text-[13px] font-medium truncate">${r.dom}</div>
+          <div class="col-span-2 flex items-center gap-2">
+            <div class="w-14 h-1 rounded-full overflow-hidden" style="background:rgba(64,38,22,.15)">
+              <div style="width:${r.risk}%; height:100%; background:${rc}"></div>
+            </div>
+            <span class="mono text-[11px] font-medium">${r.risk}</span>
+          </div>
+          <div class="col-span-2 flex flex-wrap gap-1.5">
+            ${r.tags.slice(0,2).map(t=>`<span class="mono text-[9.5px] tracking-[.18em] uppercase px-1.5 py-0.5 rounded border text-[color:var(--fg-2)]" style="border-color:var(--line-2)">${t}</span>`).join('')}
+          </div>
+          <div class="col-span-2 mono text-[10px] tracking-[.22em] uppercase flex items-center gap-2" style="color:${c.color}">
+            <span class="w-1.5 h-1.5 rounded-full" style="background:${c.color}"></span>${c.label}
+          </div>
+          <div class="col-span-1 flex justify-end"><i data-lucide="chevron-right" class="w-4 h-4 text-[color:var(--fg-3)]"></i></div>
+        `;
+        target.appendChild(row);
+      });
+    if (target.children.length === 0){
+      target.innerHTML = `<div class="px-5 py-10 text-center mono text-[11px] tracking-[.22em] uppercase text-[color:var(--fg-3)]">No entries match</div>`;
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+  document.querySelectorAll('.rfilter').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.rfilter').forEach(b=> b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.rfilter').forEach(b=> {
+        b.style.background = b.classList.contains('active') ? 'rgba(255,255,255,.06)' : 'transparent';
+      });
+      renderRegistry();
+    });
+  });
+  // initial styling
+  document.querySelectorAll('.rfilter').forEach(b=> b.style.background = b.classList.contains('active') ? 'rgba(255,255,255,.06)' : 'transparent');
+  document.getElementById('registrySearch').addEventListener('input', renderRegistry);
+  renderRegistry();
+</script>
+
+</body>
+</html>

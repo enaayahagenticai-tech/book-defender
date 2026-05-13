@@ -1,0 +1,31 @@
+name: feature-development
+description: Standardized process for implementing new features in Book Defender.
+
+steps:
+  - name: analyze_requirements
+    description: Research existing code and documentation to understand feature scope.
+    tools: [list_dir, grep_search, view_file]
+
+  - name: generate_plan
+    description: Create an implementation_plan.md with architecture and coding rule compliance.
+    tools: [write_to_file]
+
+  - name: implement_backend
+    description: Update Supabase schema and database logic in backend/supabase.
+    tools: [replace_file_content, run_command]
+
+  - name: implement_frontend
+    description: Build UI components and update Zustand stores in frontend/.
+    tools: [write_to_file, replace_file_content]
+
+  - name: run_tests
+    description: Verify changes using scripts in tests/ and manual UI checks.
+    tools: [run_command]
+
+  - name: generate_docs
+    description: Update architecture.md, api.md, and roadmap.md to reflect changes.
+    tools: [replace_file_content]
+
+  - name: finalize
+    description: Generate a PR summary and cleanup temporary files.
+    tools: [write_to_file]
